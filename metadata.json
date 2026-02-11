@@ -1,0 +1,7 @@
+{
+  "name": "EcoShift Hub",
+  "description": "Inclusive Smart Mobility PWA for students, peer tutoring, and accessibility assistance (PNRR Missions 3, 4, 5).",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

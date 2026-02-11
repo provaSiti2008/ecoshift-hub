@@ -1,0 +1,41 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Server sensitive files
+server/.env
+server/ecoshift.db
+server/actual_columns.txt
+server/schema_log.txt
+server/email_logs.txt
+server/debug_log.txt
+server/debug_api.log
+debug_api.log
+email_logs.txt
+actual_columns.txt
+schema_log.txt
+debug_log.txt
+node_modules/
+dist/
+.env.local
