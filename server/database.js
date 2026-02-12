@@ -76,8 +76,7 @@ async function initDb() {
             skills TEXT,
             "accessibilityNeeds" TEXT,
             credits INTEGER,
-            password TEXT,
-            "emailVerified" INTEGER DEFAULT 1
+            password TEXT
         )`,
     // Trips Table
     `CREATE TABLE IF NOT EXISTS trips (
@@ -132,24 +131,12 @@ async function initDb() {
             creatorId TEXT,
             members TEXT,
             maxMembers INTEGER
-        )`,
-    // Email verification tokens (token, userId, expires)
-    `CREATE TABLE IF NOT EXISTS email_verification_tokens (
-            token TEXT PRIMARY KEY,
-            userId TEXT NOT NULL,
-            expires TEXT NOT NULL
-        )`,
-    // Password reset tokens (token, userId, expires)
-    `CREATE TABLE IF NOT EXISTS password_reset_tokens (
-            token TEXT PRIMARY KEY,
-            userId TEXT NOT NULL,
-            expires TEXT NOT NULL
         )`
   ];
 
   // Ensure notification table specifically (critical fix)
   try {
-    await query(`CREATE TABLE IF NOT EXISTS notifications (
+    await query(`CREATE TABLE IF NOT EXISTS notifications(
       id TEXT PRIMARY KEY,
       userId TEXT,
       text TEXT,
@@ -170,16 +157,7 @@ async function initDb() {
     }
   }
 
-  // Migration: Add emailVerified column if missing
-  try {
-    if (!isPostgres) {
-      await query(`ALTER TABLE users ADD COLUMN emailVerified INTEGER DEFAULT 1`);
-    } else {
-      await query(`ALTER TABLE users ADD COLUMN "emailVerified" INTEGER DEFAULT 1`);
-    }
-  } catch (e) {
-    // Column already exists
-  }
+
 
   // Migration: Add accessibilityNeeds column if missing
   try {

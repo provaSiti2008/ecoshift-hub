@@ -13,7 +13,6 @@ export interface User {
   accessibilityNeeds: string[]; // For Mission 5 (Disability Support)
   credits: number; // CO2 Eco-Credits
   password?: string; // Simple password storage for prototype
-  emailVerified?: boolean; // true after user clicks confirmation link
 }
 
 export interface Trip {

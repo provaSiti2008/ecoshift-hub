@@ -8,8 +8,6 @@ import { db } from './db';
 import { MOCK_DRIVER_IDS } from './constants';
 import { ProfileModal } from './components/ProfileModal';
 import { AuthScreen } from './components/AuthScreen';
-import { VerifyEmail } from './components/VerifyEmail';
-import { ResetPassword } from './components/ResetPassword';
 
 const App: React.FC = () => {
   const { t } = useLanguage();
@@ -137,17 +135,6 @@ const App: React.FC = () => {
         <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
-  }
-
-  // Routing
-  if (currentRoute === '#verify-email') {
-    const token = routeParams.get('token') || '';
-    return <VerifyEmail token={token} onNavigate={handleNavigate} />;
-  }
-
-  if (currentRoute === '#reset-password') {
-    const token = routeParams.get('token') || '';
-    return <ResetPassword token={token} onNavigate={handleNavigate} />;
   }
 
   if (!currentUser) {

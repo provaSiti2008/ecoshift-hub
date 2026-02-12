@@ -29,7 +29,7 @@ class MamaDB {
     this.triggerSyncUI();
   }
 
-  /** Register new user and send verification email */
+  /** Register new user */
   async register(user: User): Promise<{ ok: boolean; error?: string }> {
     const res = await fetch(`${API_URL}/auth/register`, {
       method: 'POST',
@@ -40,57 +40,6 @@ class MamaDB {
     if (!res.ok) {
       return { ok: false, error: data.error || res.statusText };
     }
-    return { ok: true };
-  }
-
-  /** Verify email with token from link */
-  async verifyEmail(token: string): Promise<{ ok: boolean; error?: string }> {
-    const res = await fetch(`${API_URL}/auth/verify-email?token=${encodeURIComponent(token)}`);
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      return { ok: false, error: data.error || 'INVALID_TOKEN' };
-    }
-    this.triggerSyncUI();
-    return { ok: true };
-  }
-
-  /** Resend verification email */
-  async resendVerificationEmail(email: string): Promise<{ ok: boolean; error?: string }> {
-    const res = await fetch(`${API_URL}/auth/resend-verification`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      return { ok: false, error: data.error || res.statusText };
-    }
-    return { ok: true };
-  }
-
-  /** Request password reset email */
-  async forgotPassword(email: string): Promise<{ ok: boolean }> {
-    const res = await fetch(`${API_URL}/auth/forgot-password`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
-    });
-    await res.json().catch(() => ({}));
-    return { ok: true };
-  }
-
-  /** Reset password with token from email */
-  async resetPassword(token: string, newPassword: string): Promise<{ ok: boolean; error?: string }> {
-    const res = await fetch(`${API_URL}/auth/reset-password`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, newPassword })
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      return { ok: false, error: data.error || 'INVALID_TOKEN' };
-    }
-    this.triggerSyncUI();
     return { ok: true };
   }
 

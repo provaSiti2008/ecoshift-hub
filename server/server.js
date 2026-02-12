@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const db = require('./database');
 const { isPostgres } = require('./database');
-const emailService = require('./emailService');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -21,7 +20,7 @@ app.post('/api/auth/register', async (req, res) => {
         if (existing.length > 0) {
             return res.status(409).json({ error: 'EMAIL_EXISTS' });
         }
-        const emailVerified = 0;
+        const emailVerified = 1; // Verified by default
         const params = [
             normalizedId,
             user.name,
@@ -37,132 +36,7 @@ app.post('/api/auth/register', async (req, res) => {
             : `INSERT INTO users (id, name, role, skills, accessibilityNeeds, credits, password, emailVerified) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
         await db.query(sql, params);
 
-        const token = emailService.generateToken();
-        const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-        await db.query(
-            'INSERT INTO email_verification_tokens (token, userId, expires) VALUES (?, ?, ?)',
-            [token, normalizedId, expires]
-        );
-        await emailService.sendVerificationEmail(normalizedId, token);
-
-        res.json({ message: 'User registered', id: normalizedId, emailSent: true });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// --- Auth: verify email (GET so user can open link in email) ---
-app.get('/api/auth/verify-email', async (req, res) => {
-    const token = req.query.token;
-    if (!token) {
-        return res.status(400).json({ error: 'Missing token' });
-    }
-    try {
-        const rows = await db.query('SELECT userId, expires FROM email_verification_tokens WHERE token = ?', [token]);
-        if (rows.length === 0) {
-            return res.status(400).json({ error: 'INVALID_TOKEN' });
-        }
-        const { userId, expires } = rows[0];
-        if (new Date(expires) < new Date()) {
-            await db.query('DELETE FROM email_verification_tokens WHERE token = ?', [token]);
-            return res.status(400).json({ error: 'TOKEN_EXPIRED' });
-        }
-        await db.query('UPDATE users SET emailVerified = 1 WHERE id = ?', [userId]);
-        await db.query('DELETE FROM email_verification_tokens WHERE token = ?', [token]);
-        res.json({ message: 'Email verified', userId });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// --- Auth: resend verification email ---
-app.post('/api/auth/resend-verification', async (req, res) => {
-    const { email } = req.body;
-    const normalizedId = (email || '').toLowerCase().trim();
-    if (!normalizedId) {
-        return res.status(400).json({ error: 'Missing email' });
-    }
-    try {
-        const users = await db.query('SELECT id FROM users WHERE id = ?', [normalizedId]);
-        if (users.length === 0) {
-            return res.status(404).json({ error: 'USER_NOT_FOUND' });
-        }
-        const token = emailService.generateToken();
-        const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-        await db.query('DELETE FROM email_verification_tokens WHERE userId = ?', [normalizedId]);
-        await db.query(
-            'INSERT INTO email_verification_tokens (token, userId, expires) VALUES (?, ?, ?)',
-            [token, normalizedId, expires]
-        );
-        await emailService.sendVerificationEmail(normalizedId, token);
-        res.json({ message: 'Verification email sent' });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// --- Auth: test email (manual trigger) ---
-app.post('/api/test-email', async (req, res) => {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ error: 'Missing email' });
-
-    try {
-        await emailService.sendMail({
-            to: email,
-            subject: 'EcoShift Hub - Test Email',
-            html: '<p>If you see this, <b>email sending is working!</b></p>'
-        });
-        res.json({ message: 'Test email sent' });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// --- Auth: forgot password ---
-app.post('/api/auth/forgot-password', async (req, res) => {
-    const { email } = req.body;
-    const normalizedId = (email || '').toLowerCase().trim();
-    if (!normalizedId) {
-        return res.status(400).json({ error: 'Missing email' });
-    }
-    try {
-        const users = await db.query('SELECT id FROM users WHERE id = ?', [normalizedId]);
-        if (users.length === 0) {
-            return res.json({ message: 'If the email exists, a reset link was sent' });
-        }
-        const token = emailService.generateToken();
-        const expires = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-        await db.query('DELETE FROM password_reset_tokens WHERE userId = ?', [normalizedId]);
-        await db.query(
-            'INSERT INTO password_reset_tokens (token, userId, expires) VALUES (?, ?, ?)',
-            [token, normalizedId, expires]
-        );
-        await emailService.sendPasswordResetEmail(normalizedId, token);
-        res.json({ message: 'If the email exists, a reset link was sent' });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// --- Auth: reset password ---
-app.post('/api/auth/reset-password', async (req, res) => {
-    const { token, newPassword } = req.body;
-    if (!token || !newPassword) {
-        return res.status(400).json({ error: 'Missing token or newPassword' });
-    }
-    try {
-        const rows = await db.query('SELECT userId, expires FROM password_reset_tokens WHERE token = ?', [token]);
-        if (rows.length === 0) {
-            return res.status(400).json({ error: 'INVALID_TOKEN' });
-        }
-        const { userId, expires } = rows[0];
-        if (new Date(expires) < new Date()) {
-            await db.query('DELETE FROM password_reset_tokens WHERE token = ?', [token]);
-            return res.status(400).json({ error: 'TOKEN_EXPIRED' });
-        }
-        await db.query('UPDATE users SET password = ? WHERE id = ?', [newPassword, userId]);
-        await db.query('DELETE FROM password_reset_tokens WHERE token = ?', [token]);
-        res.json({ message: 'Password updated', userId });
+        res.json({ message: 'User registered', id: normalizedId });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -468,13 +342,6 @@ app.post('/api/study-groups/:id/join', async (req, res) => {
 module.exports = app;
 
 if (require.main === module) {
-    // Verify Email Configuration on Startup
-    emailService.verifyConnection().then(success => {
-        if (!success) {
-            console.warn("⚠️  Email service not fully configured. Emails may land in server/email_logs.txt");
-        }
-    });
-
     app.listen(PORT, () => {
         console.log(`Server running on http://localhost:${PORT}`);
     });

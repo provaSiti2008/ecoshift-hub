@@ -9,7 +9,7 @@ interface AuthScreenProps {
 
 export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
   const { t } = useLanguage();
-  const [view, setView] = useState<'login' | 'register' | 'forgot'>('login');
+  const [view, setView] = useState<'login' | 'register'>('login');
 
   // Form fields
   const [email, setEmail] = useState('');
@@ -45,14 +45,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
         // Password check (client-side for prototype)
         if (user.password && user.password !== password) {
           setError(t.auth_error_password);
-          setLoading(false);
-          return;
-        }
-
-        // Verification check
-        // Note: user.emailVerified might be 1/0 or boolean depending on DB. db.ts maps it to boolean.
-        if (!user.emailVerified) {
-          setError(t.auth_verify_required || 'Email not verified.');
           setLoading(false);
           return;
         }
@@ -95,16 +87,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
         skills: [],
         accessibilityNeeds: [],
         credits: 500,
-        password: password,
-        emailVerified: false // Explicitly false
+        password: password
       };
 
       const result = await db.register(newUser);
 
       if (result.ok) {
-        setSuccessMsg(t.auth_verify_email_sent);
-        // Switch to login view or stay here showing success
-        // setView('login'); 
+        // Auto-login after registration
+        db.setSession(newUser);
+        onLoginSuccess(newUser);
       } else {
         setError(result.error || 'Registration failed');
       }
@@ -115,42 +106,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     }
   };
 
-  const handleForgot = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setSuccessMsg('');
-
-    if (!email) {
-      setError(t.uni_email + ' required');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await db.forgotPassword(email);
-      setSuccessMsg(t.auth_reset_link_sent || 'If account exists, email sent.');
-    } catch (err) {
-      setError('Failed to send email');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResendVerification = async () => {
-    if (!email) return;
-    setLoading(true);
-    try {
-      const result = await db.resendVerificationEmail(email);
-      if (result.ok) {
-        setSuccessMsg(t.auth_verify_email_sent || 'Email sent');
-        setError('');
-      } else {
-        setError(result.error || 'Failed');
-      }
-    } catch (err) {
-      setError('Error sending email');
-    } finally {
-      setLoading(false);
+  const handleSubmit = async (e: React.FormEvent) => {
+    if (view === 'login') {
+      await handleLogin(e);
+    } else {
+      await handleSignup(e);
     }
   };
 
@@ -186,11 +146,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
               <div className="flex items-center gap-2">
                 <span>⚠️</span> {error}
               </div>
-              {(error.includes('verif') || error === t.auth_verify_required) && (
-                <button onClick={handleResendVerification} className="text-rose-700 underline text-left mt-1 hover:text-rose-800">
-                  {t.auth_resend_verification || 'Resend Email'}
-                </button>
-              )}
             </div>
           )}
 
@@ -200,111 +155,68 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
             </div>
           )}
 
-          {view === 'forgot' ? (
-            <form onSubmit={handleForgot} className="space-y-5">
-              <h3 className="text-center font-bold text-slate-700">{t.auth_forgot_password}</h3>
-              <p className="text-center text-xs text-slate-400 px-4">{t.auth_forgot_password_desc || 'Enter email to reset password'}</p>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {view === 'register' && (
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{t.uni_email}</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{t.full_name}</label>
                 <input
                   required
-                  type="email"
-                  placeholder="nome.cognome@polimi.it"
+                  type="text"
+                  placeholder="Mario Rossi"
                   className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:border-brand-500 outline-none transition-all"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  value={name}
+                  onChange={e => setName(e.target.value)}
                 />
               </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-slate-900 text-white py-5 rounded-3xl font-black text-sm tracking-widest hover:bg-slate-800 shadow-xl transition-all active:scale-95 mt-4 disabled:opacity-50"
-              >
-                {loading ? t.loading : (t.auth_send_reset_link || 'Send Link')}
-              </button>
-              <button
-                type="button"
-                onClick={() => { setView('login'); clearState(); }}
-                className="w-full text-slate-400 py-2 text-xs font-bold hover:text-slate-600 transition-colors"
-              >
-                {t.back_to_login || 'Back to Login'}
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={view === 'login' ? handleLogin : handleSignup} className="space-y-5">
-              {view === 'register' && (
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{t.full_name}</label>
-                  <input
-                    required
-                    type="text"
-                    placeholder="Mario Rossi"
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:border-brand-500 outline-none transition-all"
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                  />
-                </div>
-              )}
+            )}
 
+            <div>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{t.uni_email}</label>
+              <input
+                required
+                type="email"
+                placeholder="nome.cognome@polimi.it"
+                className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:border-brand-500 outline-none transition-all"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{t.password}</label>
+              <input
+                required
+                type="password"
+                placeholder="••••••••"
+                className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:border-brand-500 outline-none transition-all"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+              />
+            </div>
+
+            {view === 'register' && (
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{t.uni_email}</label>
-                <input
-                  required
-                  type="email"
-                  placeholder="nome.cognome@polimi.it"
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{t.default_role}</label>
+                <select
                   className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:border-brand-500 outline-none transition-all"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                />
+                  value={role}
+                  onChange={e => setRole(e.target.value as UserRole)}
+                >
+                  <option value={UserRole.BOTH}>{t.role_both}</option>
+                  <option value={UserRole.DRIVER}>{t.role_driver}</option>
+                  <option value={UserRole.PASSENGER}>{t.role_passenger}</option>
+                </select>
               </div>
+            )}
 
-              <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{t.password}</label>
-                <input
-                  required
-                  type="password"
-                  placeholder="••••••••"
-                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:border-brand-500 outline-none transition-all"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                />
-                {view === 'login' && (
-                  <div className="text-right mt-2">
-                    <button
-                      type="button"
-                      onClick={() => { setView('forgot'); clearState(); }}
-                      className="text-[10px] font-bold text-brand-600 hover:text-brand-700 transition-colors"
-                    >
-                      {t.auth_forgot_password}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {view === 'register' && (
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{t.default_role}</label>
-                  <select
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:border-brand-500 outline-none transition-all"
-                    value={role}
-                    onChange={e => setRole(e.target.value as UserRole)}
-                  >
-                    <option value={UserRole.BOTH}>{t.role_both}</option>
-                    <option value={UserRole.DRIVER}>{t.role_driver}</option>
-                    <option value={UserRole.PASSENGER}>{t.role_passenger}</option>
-                  </select>
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-slate-900 text-white py-5 rounded-3xl font-black text-sm tracking-widest hover:bg-slate-800 shadow-xl transition-all active:scale-95 mt-4 disabled:opacity-50"
-              >
-                {loading ? t.loading : (view === 'login' ? t.login_action : t.register_action)}
-              </button>
-            </form>
-          )}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-slate-900 text-white py-5 rounded-3xl font-black text-sm tracking-widest hover:bg-slate-800 shadow-xl transition-all active:scale-95 mt-4 disabled:opacity-50"
+            >
+              {loading ? t.loading : (view === 'login' ? t.login_action : t.register_action)}
+            </button>
+          </form>
 
           <p className="text-center text-[10px] text-slate-400 font-bold mt-8 uppercase tracking-widest leading-relaxed">
             {t.auth_pnrr_contribution} <br />
