@@ -321,7 +321,9 @@ app.post('/api/study-groups', async (req, res) => {
         return res.status(400).json({ error: 'Missing required fields: id, trainNumber, subject, creatorId' });
     }
 
-    const sql = `INSERT INTO study_groups (id, trainNumber, trainLine, departureTime, subject, fromLoc, creatorId, members, maxMembers) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const sql = isPostgres
+        ? `INSERT INTO study_groups (id, \"trainNumber\", \"trainLine\", \"departureTime\", subject, \"fromLoc\", \"creatorId\", members, \"maxMembers\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        : `INSERT INTO study_groups (id, trainNumber, trainLine, departureTime, subject, fromLoc, creatorId, members, maxMembers) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     try {
         await db.query(sql, [
             g.id,
