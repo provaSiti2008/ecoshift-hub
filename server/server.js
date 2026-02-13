@@ -231,7 +231,7 @@ app.post('/api/messages', async (req, res) => {
     }
 
     const sql = isPostgres
-        ? `INSERT INTO messages (id, tripId, senderId, senderName, "text", timestamp) VALUES (?, ?, ?, ?, ?, ?)`
+        ? `INSERT INTO messages (id, "tripId", "senderId", "senderName", text, timestamp) VALUES (?, ?, ?, ?, ?, ?)`
         : `INSERT INTO messages (id, tripId, senderId, senderName, text, timestamp) VALUES (?, ?, ?, ?, ?, ?)`;
     try {
         await db.query(sql, [m.id, m.tripId, m.senderId, m.senderName, m.text, m.timestamp]);
