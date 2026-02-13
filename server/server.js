@@ -211,7 +211,10 @@ app.put('/api/notifications/:id/read', async (req, res) => {
 // --- Chat Messages ---
 app.get('/api/messages/:tripId', async (req, res) => {
     try {
-        const rows = await db.query('SELECT * FROM messages WHERE tripId = ? ORDER BY timestamp ASC', [req.params.tripId]);
+        const sql = isPostgres
+            ? 'SELECT * FROM messages WHERE "tripId" = ? ORDER BY timestamp ASC'
+            : 'SELECT * FROM messages WHERE tripId = ? ORDER BY timestamp ASC';
+        const rows = await db.query(sql, [req.params.tripId]);
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
