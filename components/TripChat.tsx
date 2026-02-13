@@ -11,11 +11,19 @@ export const TripChat: React.FC<TripChatProps> = ({ tripId, currentUser }) => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [isOpen, setIsOpen] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
 
     const loadMessages = async () => {
-        const msgs = await db.getMessages(tripId);
-        setMessages(msgs);
+        try {
+            setError(null);
+            const msgs = await db.getMessages(tripId);
+            setMessages(msgs || []);
+        } catch (err) {
+            console.error('Error loading messages:', err);
+            setError('Impossibile caricare i messaggi');
+        }
     };
 
     useEffect(() => {
@@ -37,37 +45,46 @@ export const TripChat: React.FC<TripChatProps> = ({ tripId, currentUser }) => {
         e.preventDefault();
         if (!newMessage.trim()) return;
 
-        const message: Message = {
-            id: Date.now().toString(),
-            tripId,
-            senderId: currentUser.id,
-            senderName: currentUser.name,
-            text: newMessage.trim(),
-            timestamp: new Date().toISOString()
-        };
+        setLoading(true);
+        setError(null);
 
-        await db.sendMessage(message);
-        setNewMessage('');
-        loadMessages();
+        try {
+            const message: Message = {
+                id: Date.now().toString(),
+                tripId,
+                senderId: currentUser.id,
+                senderName: currentUser.name,
+                text: newMessage.trim(),
+                timestamp: new Date().toISOString()
+            };
 
-        // Notifica gli altri partecipanti
-        const trips = await db.getTrips();
-        const trip = trips.find(t => t.id === tripId);
-        if (trip) {
-            const recipients = [trip.driverId, ...(trip.passengerIds || [])].filter(id => id !== currentUser.id);
-            // Rimuovi duplicati (se ci sono)
-            const uniqueRecipients = [...new Set(recipients)];
+            await db.sendMessage(message);
+            setNewMessage('');
+            await loadMessages();
 
-            for (const recipientId of uniqueRecipients) {
-                await db.addNotification({
-                    id: Math.random().toString(),
-                    userId: recipientId,
-                    text: `Nuovo messaggio da ${currentUser.name} nel viaggio per ${trip.to}`,
-                    read: false,
-                    type: 'info',
-                    timestamp: new Date().toISOString()
-                });
+            // Notifica gli altri partecipanti
+            const trips = await db.getTrips();
+            const trip = trips.find(t => t.id === tripId);
+            if (trip) {
+                const recipients = [trip.driverId, ...(trip.passengerIds || [])].filter(id => id !== currentUser.id);
+                const uniqueRecipients = [...new Set(recipients)];
+
+                for (const recipientId of uniqueRecipients) {
+                    await db.addNotification({
+                        id: Math.random().toString(),
+                        userId: recipientId,
+                        text: `Nuovo messaggio da ${currentUser.name} nel viaggio per ${trip.to}`,
+                        read: false,
+                        type: 'info',
+                        timestamp: new Date().toISOString()
+                    });
+                }
             }
+        } catch (err) {
+            console.error('Error sending message:', err);
+            setError('Impossibile inviare il messaggio');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -88,6 +105,12 @@ export const TripChat: React.FC<TripChatProps> = ({ tripId, currentUser }) => {
                 <h4 className="text-xs font-black text-slate-600 uppercase tracking-widest">Chat di Gruppo</h4>
                 <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold">✕</button>
             </div>
+
+            {error && (
+                <div className="bg-rose-50 border-b border-rose-100 px-4 py-2 text-xs text-rose-600 font-medium">
+                    ⚠️ {error}
+                </div>
+            )}
 
             <div
                 ref={scrollRef}

@@ -181,11 +181,20 @@ app.get('/api/notifications', async (req, res) => {
 
 app.post('/api/notifications', async (req, res) => {
     const n = req.body;
+    console.log('[API] Creating notification:', { userId: n.userId, type: n.type, text: n.text?.substring(0, 50) });
+
+    if (!n.id || !n.userId || !n.text) {
+        console.error('[API] Missing required notification fields:', { id: !!n.id, userId: !!n.userId, text: !!n.text });
+        return res.status(400).json({ error: 'Missing required fields: id, userId, text' });
+    }
+
     const sql = `INSERT INTO notifications (id, userId, text, read, type, timestamp) VALUES (?, ?, ?, ?, ?, ?)`;
     try {
         await db.query(sql, [n.id, n.userId, n.text, n.read ? 1 : 0, n.type, n.timestamp]);
-        res.json({ message: 'Notification added' });
+        console.log('[API] Notification created successfully:', n.id);
+        res.json({ message: 'Notification added', id: n.id });
     } catch (err) {
+        console.error('[API] Error creating notification:', err.message);
         res.status(500).json({ error: err.message });
     }
 });
@@ -211,13 +220,22 @@ app.get('/api/messages/:tripId', async (req, res) => {
 
 app.post('/api/messages', async (req, res) => {
     const m = req.body;
+    console.log('[API] Creating message:', { tripId: m.tripId, senderId: m.senderId, text: m.text?.substring(0, 30) });
+
+    if (!m.id || !m.tripId || !m.senderId || !m.text) {
+        console.error('[API] Missing required message fields');
+        return res.status(400).json({ error: 'Missing required fields: id, tripId, senderId, text' });
+    }
+
     const sql = isPostgres
         ? `INSERT INTO messages (id, tripId, senderId, senderName, "text", timestamp) VALUES (?, ?, ?, ?, ?, ?)`
         : `INSERT INTO messages (id, tripId, senderId, senderName, text, timestamp) VALUES (?, ?, ?, ?, ?, ?)`;
     try {
         await db.query(sql, [m.id, m.tripId, m.senderId, m.senderName, m.text, m.timestamp]);
-        res.json({ message: 'Message sent' });
+        console.log('[API] Message created successfully:', m.id);
+        res.json({ message: 'Message sent', id: m.id });
     } catch (err) {
+        console.error('[API] Error creating message:', err.message);
         res.status(500).json({ error: err.message });
     }
 });
@@ -293,6 +311,13 @@ app.get('/api/study-groups', async (req, res) => {
 
 app.post('/api/study-groups', async (req, res) => {
     const g = req.body;
+    console.log('[API] Creating study group:', { trainNumber: g.trainNumber, subject: g.subject, creatorId: g.creatorId });
+
+    if (!g.id || !g.trainNumber || !g.subject || !g.creatorId) {
+        console.error('[API] Missing required study group fields');
+        return res.status(400).json({ error: 'Missing required fields: id, trainNumber, subject, creatorId' });
+    }
+
     const sql = `INSERT INTO study_groups (id, trainNumber, trainLine, departureTime, subject, fromLoc, creatorId, members, maxMembers) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     try {
         await db.query(sql, [
@@ -306,8 +331,10 @@ app.post('/api/study-groups', async (req, res) => {
             JSON.stringify(g.members),
             g.maxMembers
         ]);
-        res.json({ message: 'Study group created' });
+        console.log('[API] Study group created successfully:', g.id);
+        res.json({ message: 'Study group created', id: g.id });
     } catch (err) {
+        console.error('[API] Error creating study group:', err.message);
         res.status(500).json({ error: err.message });
     }
 });

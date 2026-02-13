@@ -12,12 +12,19 @@ export const StudyGroupChat: React.FC<StudyGroupChatProps> = ({ groupId, current
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [isOpen, setIsOpen] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
 
     const loadMessages = async () => {
-        // Reuse getMessages since it just filters by tripId matching our groupId
-        const msgs = await db.getMessages(groupId);
-        setMessages(msgs);
+        try {
+            setError(null);
+            const msgs = await db.getMessages(groupId);
+            setMessages(msgs || []);
+        } catch (err) {
+            console.error('Error loading study group messages:', err);
+            setError('Impossibile caricare i messaggi');
+        }
     };
 
     useEffect(() => {
@@ -39,36 +46,46 @@ export const StudyGroupChat: React.FC<StudyGroupChatProps> = ({ groupId, current
         e.preventDefault();
         if (!newMessage.trim()) return;
 
-        const message: Message = {
-            id: Date.now().toString(),
-            tripId: groupId, // Storing groupId in tripId column
-            senderId: currentUser.id,
-            senderName: currentUser.name,
-            text: newMessage.trim(),
-            timestamp: new Date().toISOString()
-        };
+        setLoading(true);
+        setError(null);
 
-        await db.sendMessage(message);
-        setNewMessage('');
-        loadMessages();
+        try {
+            const message: Message = {
+                id: Date.now().toString(),
+                tripId: groupId, // Storing groupId in tripId column
+                senderId: currentUser.id,
+                senderName: currentUser.name,
+                text: newMessage.trim(),
+                timestamp: new Date().toISOString()
+            };
 
-        // Notify other group members
-        const groups = await db.getStudyGroups();
-        const group = groups.find(g => g.id === groupId);
-        if (group) {
-            const recipients = (group.members || []).filter(id => id !== currentUser.id);
-            const uniqueRecipients = [...new Set(recipients)];
+            await db.sendMessage(message);
+            setNewMessage('');
+            await loadMessages();
 
-            for (const recipientId of uniqueRecipients) {
-                await db.addNotification({
-                    id: Math.random().toString(),
-                    userId: recipientId,
-                    text: `Nuovo messaggio nel gruppo "${groupName}" da ${currentUser.name}`,
-                    read: false,
-                    type: 'info',
-                    timestamp: new Date().toISOString()
-                });
+            // Notify other group members
+            const groups = await db.getStudyGroups();
+            const group = groups.find(g => g.id === groupId);
+            if (group) {
+                const recipients = (group.members || []).filter(id => id !== currentUser.id);
+                const uniqueRecipients = [...new Set(recipients)];
+
+                for (const recipientId of uniqueRecipients) {
+                    await db.addNotification({
+                        id: Math.random().toString(),
+                        userId: recipientId,
+                        text: `Nuovo messaggio nel gruppo "${groupName}" da ${currentUser.name}`,
+                        read: false,
+                        type: 'info',
+                        timestamp: new Date().toISOString()
+                    });
+                }
             }
+        } catch (err) {
+            console.error('Error sending study group message:', err);
+            setError('Impossibile inviare il messaggio');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -89,6 +106,12 @@ export const StudyGroupChat: React.FC<StudyGroupChatProps> = ({ groupId, current
                 <h4 className="text-[10px] font-black text-indigo-800 uppercase tracking-widest truncate max-w-[150px]">{groupName}</h4>
                 <button onClick={() => setIsOpen(false)} className="text-indigo-400 hover:text-indigo-600 font-bold px-2">✕</button>
             </div>
+
+            {error && (
+                <div className="bg-rose-50 border-b border-rose-100 px-3 py-2 text-[10px] text-rose-600 font-medium">
+                    ⚠️ {error}
+                </div>
+            )}
 
             <div
                 ref={scrollRef}

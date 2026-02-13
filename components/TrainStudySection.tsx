@@ -21,6 +21,7 @@ export const TrainStudySection: React.FC<TrainStudySectionProps> = ({ currentUse
     const [loading, setLoading] = useState(false);
     const [creatingGroupId, setCreatingGroupId] = useState<string | null>(null);
     const [newGroupSubject, setNewGroupSubject] = useState('');
+    const [error, setError] = useState<string | null>(null);
 
     // Time selector state
     const [selectedTime, setSelectedTime] = useState<string>(''); // "" means "now"
@@ -63,31 +64,50 @@ export const TrainStudySection: React.FC<TrainStudySectionProps> = ({ currentUse
     }, [selectedStation, selectedTime]);
 
     const handleCreateGroup = async (trainNumber: string, trainLine: string, departureTimeStr: string) => {
-        if (!newGroupSubject.trim()) return;
+        if (!newGroupSubject.trim()) {
+            setError('Inserisci una materia per il gruppo di studio');
+            return;
+        }
 
-        const stationName = STATIONS.find(s => s.id === selectedStation)?.name || 'Unknown';
+        setError(null);
+        setLoading(true);
 
-        const newGroup: StudyGroup = {
-            id: Date.now().toString(),
-            trainNumber,
-            trainLine,
-            departureTime: departureTimeStr,
-            subject: newGroupSubject,
-            from: stationName,
-            creatorId: currentUser.id,
-            members: [currentUser.id],
-            maxMembers: 4
-        };
+        try {
+            const stationName = STATIONS.find(s => s.id === selectedStation)?.name || 'Unknown';
 
-        await db.createStudyGroup(newGroup);
-        setNewGroupSubject('');
-        setCreatingGroupId(null);
-        refreshData();
+            const newGroup: StudyGroup = {
+                id: Date.now().toString(),
+                trainNumber,
+                trainLine,
+                departureTime: departureTimeStr,
+                subject: newGroupSubject,
+                from: stationName,
+                creatorId: currentUser.id,
+                members: [currentUser.id],
+                maxMembers: 4
+            };
+
+            await db.createStudyGroup(newGroup);
+            setNewGroupSubject('');
+            setCreatingGroupId(null);
+            await refreshData();
+        } catch (err) {
+            console.error('Error creating study group:', err);
+            setError('Impossibile creare il gruppo di studio. Riprova.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleJoinGroup = async (groupId: string) => {
-        await db.joinStudyGroup(groupId, currentUser.id);
-        refreshData();
+        setError(null);
+        try {
+            await db.joinStudyGroup(groupId, currentUser.id);
+            await refreshData();
+        } catch (err) {
+            console.error('Error joining study group:', err);
+            setError('Impossibile unirsi al gruppo. Riprova.');
+        }
     };
 
     return (
@@ -150,6 +170,14 @@ export const TrainStudySection: React.FC<TrainStudySectionProps> = ({ currentUse
                         🔄 Aggiorna
                     </button>
                 </div>
+
+                {error && (
+                    <div className="mb-4 bg-rose-50 border border-rose-100 text-rose-600 px-4 py-3 rounded-2xl text-xs font-medium flex items-center gap-2">
+                        <span>⚠️</span>
+                        <span>{error}</span>
+                        <button onClick={() => setError(null)} className="ml-auto text-rose-400 hover:text-rose-600">✕</button>
+                    </div>
+                )}
 
                 {loading && departures.length === 0 ? (
                     <div className="text-center py-12 text-slate-400 text-sm animate-pulse">Caricamento tabellone...</div>
