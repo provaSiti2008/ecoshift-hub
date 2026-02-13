@@ -152,17 +152,36 @@ class MamaDB {
 
   // --- Chat ---
   async getMessages(tripId: string): Promise<Message[]> {
-    const res = await fetch(`${API_URL}/messages/${tripId}`);
-    return res.json();
+    try {
+      const res = await fetch(`${API_URL}/messages/${tripId}`);
+      if (!res.ok) {
+        console.error('Failed to fetch messages:', res.status, res.statusText);
+        return [];
+      }
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    } catch (err) {
+      console.error('Error fetching messages:', err);
+      return [];
+    }
   }
 
   async sendMessage(message: Message): Promise<void> {
-    await fetch(`${API_URL}/messages`, {
-      method: 'POST', // Corrected endpoint from log to messages
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(message)
-    });
-    this.triggerSyncUI();
+    try {
+      const res = await fetch(`${API_URL}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(message)
+      });
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(error.error || 'Failed to send message');
+      }
+      this.triggerSyncUI();
+    } catch (err) {
+      console.error('Error sending message:', err);
+      throw err;
+    }
   }
 
   // --- Notifications ---
@@ -179,7 +198,7 @@ class MamaDB {
   }
 
   async addNotification(notification: Notification): Promise<void> {
-    await fetch(`${API_URL}/notifications`, {
+    await fetch(`${API_URL} / notifications`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(notification)
@@ -188,23 +207,42 @@ class MamaDB {
   }
 
   async markNotificationRead(notificationId: string): Promise<void> {
-    await fetch(`${API_URL}/notifications/${notificationId}/read`, { method: 'PUT' });
+    await fetch(`${API_URL} /notifications/${notificationId}/read`, { method: 'PUT' });
     this.triggerSyncUI();
   }
 
   // --- Study Groups ---
   async getStudyGroups(): Promise<StudyGroup[]> {
-    const res = await fetch(`${API_URL}/study-groups`);
-    return res.json();
+    try {
+      const res = await fetch(`${API_URL}/study-groups`);
+      if (!res.ok) {
+        console.error('Failed to fetch study groups:', res.status, res.statusText);
+        return [];
+      }
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    } catch (err) {
+      console.error('Error fetching study groups:', err);
+      return [];
+    }
   }
 
   async createStudyGroup(group: StudyGroup): Promise<void> {
-    await fetch(`${API_URL}/study-groups`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(group)
-    });
-    this.triggerSyncUI();
+    try {
+      const res = await fetch(`${API_URL}/study-groups`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(group)
+      });
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(error.error || 'Failed to create study group');
+      }
+      this.triggerSyncUI();
+    } catch (err) {
+      console.error('Error creating study group:', err);
+      throw err;
+    }
   }
 
   async joinStudyGroup(groupId: string, userId: string): Promise<void> {
