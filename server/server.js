@@ -188,7 +188,9 @@ app.post('/api/notifications', async (req, res) => {
         return res.status(400).json({ error: 'Missing required fields: id, userId, text' });
     }
 
-    const sql = `INSERT INTO notifications (id, userId, text, read, type, timestamp) VALUES (?, ?, ?, ?, ?, ?)`;
+    const sql = isPostgres
+        ? `INSERT INTO notifications (id, "userId", text, read, type, timestamp) VALUES (?, ?, ?, ?, ?, ?)`
+        : `INSERT INTO notifications (id, userId, text, read, type, timestamp) VALUES (?, ?, ?, ?, ?, ?)`;
     try {
         await db.query(sql, [n.id, n.userId, n.text, n.read ? 1 : 0, n.type, n.timestamp]);
         console.log('[API] Notification created successfully:', n.id);
