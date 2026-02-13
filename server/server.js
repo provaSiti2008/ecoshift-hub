@@ -370,6 +370,15 @@ app.post('/api/study-groups/:id/join', async (req, res) => {
     }
 });
 
+app.delete('/api/study-groups/:id', async (req, res) => {
+    try {
+        await db.query('DELETE FROM study_groups WHERE id = ?', [req.params.id]);
+        res.json({ message: 'Study group deleted' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 
 module.exports = app;
 

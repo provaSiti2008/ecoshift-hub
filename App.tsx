@@ -47,8 +47,34 @@ const App: React.FC = () => {
   useEffect(() => {
     const initApp = async () => {
       try {
-        // Elimina dal database i viaggi creati da utenti finti (demo) e il viaggio di "test user"
+        // 1. Archiviazione automatica viaggi scaduti (pulizia del database)
         const allTrips = await db.getTrips();
+        const now = new Date();
+        const expiredTrips = allTrips.filter(t => new Date(t.departureTime) < now);
+        for (const trip of expiredTrips) {
+          await db.deleteTrip(trip.id);
+          console.log(`[App] Viaggio scaduto archiviato e rimosso: ${trip.id}`);
+        }
+
+        // 2. Archiviazione automatica gruppi di studio scaduti
+        const allGroups = await db.getStudyGroups();
+        const expiredGroups = allGroups.filter(g => {
+          // Se departureTime è in formato orario (es. "14:30"), confronta con l'orario corrente
+          if (g.departureTime && g.departureTime.match(/^\d{2}:\d{2}$/)) {
+            const [hours, minutes] = g.departureTime.split(':').map(Number);
+            const groupTime = hours * 60 + minutes;
+            const currentTime = now.getHours() * 60 + now.getMinutes();
+            return groupTime < currentTime;
+          }
+          // Altrimenti tratta come data ISO completa
+          return new Date(g.departureTime) < now;
+        });
+        for (const group of expiredGroups) {
+          await db.deleteStudyGroup(group.id);
+          console.log(`[App] Gruppo di studio scaduto archiviato e rimosso: ${group.id}`);
+        }
+
+        // 3. Elimina dal database i viaggi creati da utenti finti (demo) e il viaggio di "test user"
         const isTestUser = (t: { driverId: string; driverName?: string }) =>
           MOCK_DRIVER_IDS.includes(t.driverId) ||
           (t.driverName || '').trim().toLowerCase() === 'test user';

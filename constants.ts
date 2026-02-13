@@ -47,7 +47,8 @@ export function getCoordsWithOffset(locationName: string, uniqueId: string): { c
     const base = MILAN_COORDS[bestMatch] ?? [45.4642, 9.1900];
     const hash = uniqueId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
     const angle = (hash % 360) * (Math.PI / 180);
-    const radius = 0.00015 * (1 + (hash % 5));
+    // Offset leggermente aumentato per migliorare la visibilità di marker sovrapposti
+    const radius = 0.00025 * (1 + (hash % 6)); 
     const offsetLat = radius * Math.cos(angle);
     const offsetLng = radius * Math.sin(angle);
     return { coords: [base[0] + offsetLat, base[1] + offsetLng], label: bestMatch };

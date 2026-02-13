@@ -109,8 +109,26 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalO
       db.getTrips(),
       db.getStudyGroups()
     ]);
-    const realTrips = allTrips.filter(t => !MOCK_DRIVER_IDS.includes(t.driverId));
-    const realGroups = allGroups.filter(g => !MOCK_DRIVER_IDS.includes(g.creatorId));
+    const now = new Date();
+    // Filtro doppio: rimuove demo E viaggi scaduti
+    const realTrips = allTrips
+      .filter(t => !MOCK_DRIVER_IDS.includes(t.driverId))
+      .filter(t => new Date(t.departureTime) >= now); // Nasconde viaggi scaduti
+
+    // Filtro per gruppi di studio: rimuove demo e gestisce formato orario (HH:MM)
+    const realGroups = allGroups
+      .filter(g => !MOCK_DRIVER_IDS.includes(g.creatorId))
+      .filter(g => {
+        // Se departureTime è in formato orario (es. "14:30"), confronta con l'orario corrente
+        if (g.departureTime && g.departureTime.match(/^\d{2}:\d{2}$/)) {
+          const [hours, minutes] = g.departureTime.split(':').map(Number);
+          const groupTime = hours * 60 + minutes;
+          const currentTime = now.getHours() * 60 + now.getMinutes();
+          return groupTime >= currentTime;
+        }
+        // Altrimenti tratta come data ISO completa
+        return new Date(g.departureTime) >= now;
+      });
     const sortedTrips = realTrips.sort((a, b) => new Date(a.departureTime).getTime() - new Date(b.departureTime).getTime());
     setTrips(sortedTrips);
     setStudyGroups(realGroups);

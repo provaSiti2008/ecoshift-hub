@@ -255,6 +255,11 @@ class MamaDB {
     this.triggerSyncUI();
   }
 
+  async deleteStudyGroup(groupId: string): Promise<void> {
+    await fetch(`${API_URL}/study-groups/${groupId}`, { method: 'DELETE' });
+    this.triggerSyncUI();
+  }
+
   async getRealTimeDepartures(stationId: string, time?: Date): Promise<any[]> {
     // stationId example: S01700 (Milano Centrale), S00248 (Milano Bovisa)
     let url = `${API_URL}/trains/departures/${stationId}`;

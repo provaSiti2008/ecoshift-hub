@@ -15,16 +15,12 @@ interface MapViewProps {
 export const MapView: React.FC<MapViewProps> = ({ trips, studyGroups = [] }) => {
     const { t } = useLanguage();
     const mapContainerRef = useRef<HTMLDivElement>(null);
-    const mapInstanceRef = useRef<any>(null);
+        const mapInstanceRef = useRef<any>(null);
     const markersLayerRef = useRef<any>(null);
     const [isLeafletReady, setIsLeafletReady] = useState(false);
     const [containerReady, setContainerReady] = useState(false);
-    const tripsRef = useRef<Trip[]>(trips);
-    const studyGroupsRef = useRef<StudyGroup[]>(studyGroups);
-    tripsRef.current = trips;
-    studyGroupsRef.current = studyGroups;
 
-    // 1. Attesa del caricamento di Leaflet (CDN) - in ESM L può essere solo su window
+    // 1. Attesa del caricamento di Leaflet (CDN)
     useEffect(() => {
         const checkLeaflet = setInterval(() => {
             if (getL()) {
@@ -35,75 +31,12 @@ export const MapView: React.FC<MapViewProps> = ({ trips, studyGroups = [] }) => 
         return () => clearInterval(checkLeaflet);
     }, []);
 
-    // 1b. Quando il contenitore è visibile e ha dimensioni, segnalalo
-    useEffect(() => {
-        if (!mapContainerRef.current || !isLeafletReady) return;
-        const el = mapContainerRef.current;
-        const checkSize = () => {
-            const r = el.getBoundingClientRect();
-            if (r.width > 0 && r.height > 0) {
-                setContainerReady(true);
-                return true;
-            }
-            return false;
-        };
-        if (checkSize()) return;
-        const t1 = setTimeout(() => { checkSize() && setContainerReady(true); }, 100);
-        const t2 = setTimeout(() => { checkSize() && setContainerReady(true); }, 400);
-        const ro = new ResizeObserver(() => { checkSize() && setContainerReady(true); });
-        ro.observe(el);
-        return () => {
-            clearTimeout(t1);
-            clearTimeout(t2);
-            ro.disconnect();
-        };
-    }, [isLeafletReady]);
-
-    // 2. Inizializzazione Mappa (solo quando Leaflet e contenitore sono pronti)
-    useEffect(() => {
-        const L = getL();
-        if (!L || !containerReady || !mapContainerRef.current || mapInstanceRef.current) return;
-
-        const map = L.map(mapContainerRef.current, {
-            center: [45.4642, 9.1900],
-            zoom: 12,
-            zoomControl: false,
-            attributionControl: false
-        });
-
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            maxZoom: 19
-        }).addTo(map);
-
-        L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-        const markers = L.layerGroup().addTo(map);
-
-        mapInstanceRef.current = map;
-        markersLayerRef.current = markers;
-
-        setTimeout(() => {
-            map.invalidateSize();
-            updateMarkers();
-        }, 100);
-    }, [isLeafletReady, containerReady]);
-
-    // 3. Aggiorna marker quando cambiano trips/studyGroups (usa ref per dati sempre aggiornati)
-    useEffect(() => {
-        if (!mapInstanceRef.current) return;
-        mapInstanceRef.current.invalidateSize();
-        updateMarkers();
-    }, [trips, studyGroups, t]);
-
-    const updateMarkers = () => {
+    const updateMarkers = (currentTrips: Trip[], currentGroups: StudyGroup[]) => {
         try {
             const L = getL();
             const map = mapInstanceRef.current;
             const markersLayer = markersLayerRef.current;
             if (!L || !map || !markersLayer) return;
-
-            const currentTrips = tripsRef.current ?? [];
-            const currentGroups = studyGroupsRef.current ?? [];
 
             markersLayer.clearLayers();
 
@@ -235,6 +168,66 @@ export const MapView: React.FC<MapViewProps> = ({ trips, studyGroups = [] }) => 
             console.error("MapView Refresh Error:", error);
         }
     };
+
+    // 1b. Quando il contenitore è visibile e ha dimensioni, segnalalo
+    useEffect(() => {
+        if (!mapContainerRef.current || !isLeafletReady) return;
+        const el = mapContainerRef.current;
+        const checkSize = () => {
+            const r = el.getBoundingClientRect();
+            if (r.width > 0 && r.height > 0) {
+                setContainerReady(true);
+                return true;
+            }
+            return false;
+        };
+        if (checkSize()) return;
+        const t1 = setTimeout(() => { checkSize() && setContainerReady(true); }, 100);
+        const t2 = setTimeout(() => { checkSize() && setContainerReady(true); }, 400);
+        const ro = new ResizeObserver(() => { checkSize() && setContainerReady(true); });
+        ro.observe(el);
+        return () => {
+            clearTimeout(t1);
+            clearTimeout(t2);
+            ro.disconnect();
+        };
+    }, [isLeafletReady]);
+
+    // 2. Inizializzazione Mappa (solo quando Leaflet e contenitore sono pronti)
+    useEffect(() => {
+        const L = getL();
+        if (!L || !containerReady || !mapContainerRef.current || mapInstanceRef.current) return;
+
+        const map = L.map(mapContainerRef.current, {
+            center: [45.4642, 9.1900],
+            zoom: 12,
+            zoomControl: false,
+            attributionControl: false
+        });
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            maxZoom: 19
+        }).addTo(map);
+
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+        const markers = L.layerGroup().addTo(map);
+
+        mapInstanceRef.current = map;
+        markersLayerRef.current = markers;
+
+        setTimeout(() => {
+            map.invalidateSize();
+            updateMarkers(trips, studyGroups);
+        }, 100);
+    }, [isLeafletReady, containerReady]);
+
+    // 3. Aggiorna marker quando cambiano trips/studyGroups
+    useEffect(() => {
+        if (!mapInstanceRef.current) return;
+        mapInstanceRef.current.invalidateSize();
+        updateMarkers(trips, studyGroups);
+    }, [trips, studyGroups, t]);
 
     return (
         <div className="bg-white rounded-[3rem] overflow-hidden shadow-2xl border border-slate-200 relative w-full group" style={{ minHeight: 500, height: 600 }}>
