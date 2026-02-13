@@ -198,7 +198,7 @@ class MamaDB {
   }
 
   async addNotification(notification: Notification): Promise<void> {
-    await fetch(`${API_URL} / notifications`, {
+    await fetch(`${API_URL}/notifications`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(notification)
@@ -207,7 +207,7 @@ class MamaDB {
   }
 
   async markNotificationRead(notificationId: string): Promise<void> {
-    await fetch(`${API_URL} /notifications/${notificationId}/read`, { method: 'PUT' });
+    await fetch(`${API_URL}/notifications/${notificationId}/read`, { method: 'PUT' });
     this.triggerSyncUI();
   }
 

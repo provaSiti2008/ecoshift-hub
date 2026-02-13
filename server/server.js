@@ -134,11 +134,11 @@ app.post('/api/trips', async (req, res) => {
         JSON.stringify(trip.passengerIds || [])
     ];
     const sql = isPostgres
-        ? `INSERT INTO trips (id, driverId, driverName, fromLoc, toLoc, departureTime, seatsAvailable, distanceKm, co2Saved, tutoringSubject, assistanceOffered, specialEquipment, passengerIds)
+        ? `INSERT INTO trips (id, "driverId", "driverName", "fromLoc", "toLoc", "departureTime", "seatsAvailable", "distanceKm", "co2Saved", "tutoringSubject", "assistanceOffered", "specialEquipment", "passengerIds")
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-           ON CONFLICT (id) DO UPDATE SET driverId = EXCLUDED.driverId, driverName = EXCLUDED.driverName, fromLoc = EXCLUDED.fromLoc, toLoc = EXCLUDED.toLoc,
-           departureTime = EXCLUDED.departureTime, seatsAvailable = EXCLUDED.seatsAvailable, distanceKm = EXCLUDED.distanceKm, co2Saved = EXCLUDED.co2Saved,
-           tutoringSubject = EXCLUDED.tutoringSubject, assistanceOffered = EXCLUDED.assistanceOffered, specialEquipment = EXCLUDED.specialEquipment, passengerIds = EXCLUDED.passengerIds`
+           ON CONFLICT (id) DO UPDATE SET "driverId" = EXCLUDED."driverId", "driverName" = EXCLUDED."driverName", "fromLoc" = EXCLUDED."fromLoc", "toLoc" = EXCLUDED."toLoc",
+           "departureTime" = EXCLUDED."departureTime", "seatsAvailable" = EXCLUDED."seatsAvailable", "distanceKm" = EXCLUDED."distanceKm", "co2Saved" = EXCLUDED."co2Saved",
+           "tutoringSubject" = EXCLUDED."tutoringSubject", "assistanceOffered" = EXCLUDED."assistanceOffered", "specialEquipment" = EXCLUDED."specialEquipment", "passengerIds" = EXCLUDED."passengerIds"`
         : `INSERT OR REPLACE INTO trips (id, driverId, driverName, fromLoc, toLoc, departureTime, seatsAvailable, distanceKm, co2Saved, tutoringSubject, assistanceOffered, specialEquipment, passengerIds) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     try {
