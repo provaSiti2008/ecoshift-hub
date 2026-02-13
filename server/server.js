@@ -348,7 +348,10 @@ app.post('/api/study-groups/:id/join', async (req, res) => {
     const { userId } = req.body;
     try {
         // 1. Get current members
-        const rows = await db.query('SELECT members, maxMembers FROM study_groups WHERE id = ?', [req.params.id]);
+        const selectSql = isPostgres
+            ? 'SELECT members, "maxMembers" FROM study_groups WHERE id = ?'
+            : 'SELECT members, maxMembers FROM study_groups WHERE id = ?';
+        const rows = await db.query(selectSql, [req.params.id]);
         if (rows.length === 0) return res.status(404).json({ error: 'Group not found' });
 
         let members = JSON.parse(rows[0].members || '[]');
