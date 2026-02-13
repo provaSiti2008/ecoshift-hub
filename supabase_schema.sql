@@ -9,8 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
     skills TEXT,
     "accessibilityNeeds" TEXT,
     credits INTEGER,
-    password TEXT,
-    "emailVerified" INTEGER DEFAULT 1
+    password TEXT
 );
 
 -- Trips Table
@@ -72,16 +71,4 @@ CREATE TABLE IF NOT EXISTS study_groups (
     "maxMembers" INTEGER
 );
 
--- Email verification tokens
-CREATE TABLE IF NOT EXISTS email_verification_tokens (
-    token TEXT PRIMARY KEY,
-    "userId" TEXT NOT NULL,
-    expires TEXT NOT NULL
-);
 
--- Password reset tokens
-CREATE TABLE IF NOT EXISTS password_reset_tokens (
-    token TEXT PRIMARY KEY,
-    "userId" TEXT NOT NULL,
-    expires TEXT NOT NULL
-);

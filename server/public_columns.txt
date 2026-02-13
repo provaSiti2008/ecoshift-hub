@@ -1,6 +1,5 @@
 accessibilityNeeds
 credits
-emailVerified
 id
 name
 password

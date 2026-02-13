@@ -20,7 +20,6 @@ app.post('/api/auth/register', async (req, res) => {
         if (existing.length > 0) {
             return res.status(409).json({ error: 'EMAIL_EXISTS' });
         }
-        const emailVerified = 1; // Verified by default
         const params = [
             normalizedId,
             user.name,
@@ -28,12 +27,11 @@ app.post('/api/auth/register', async (req, res) => {
             JSON.stringify(user.skills || []),
             JSON.stringify(user.accessibilityNeeds || []),
             user.credits != null ? user.credits : 500,
-            user.password,
-            emailVerified
+            user.password
         ];
         const sql = isPostgres
-            ? `INSERT INTO users (id, name, role, skills, "accessibilityNeeds", credits, password, "emailVerified") VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-            : `INSERT INTO users (id, name, role, skills, accessibilityNeeds, credits, password, emailVerified) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+            ? `INSERT INTO users (id, name, role, skills, "accessibilityNeeds", credits, password) VALUES (?, ?, ?, ?, ?, ?, ?)`
+            : `INSERT INTO users (id, name, role, skills, accessibilityNeeds, credits, password) VALUES (?, ?, ?, ?, ?, ?, ?)`;
         await db.query(sql, params);
 
         res.json({ message: 'User registered', id: normalizedId });
@@ -49,8 +47,7 @@ app.get('/api/users', async (req, res) => {
         const users = rows.map(u => ({
             ...u,
             skills: JSON.parse(u.skills || '[]'),
-            accessibilityNeeds: JSON.parse(u.accessibilityNeeds || '[]'),
-            emailVerified: !!(u.emailVerified ?? u.emailverified ?? 1)
+            accessibilityNeeds: JSON.parse(u.accessibilityNeeds || '[]')
         }));
         res.json(users);
     } catch (err) {
@@ -60,7 +57,6 @@ app.get('/api/users', async (req, res) => {
 
 app.post('/api/users', async (req, res) => {
     const user = req.body;
-    const emailVerified = user.emailVerified === true || user.emailVerified === 1 ? 1 : 0;
     const params = [
         user.id,
         user.name,
@@ -68,14 +64,13 @@ app.post('/api/users', async (req, res) => {
         JSON.stringify(user.skills || []),
         JSON.stringify(user.accessibilityNeeds || []),
         user.credits,
-        user.password,
-        emailVerified
+        user.password
     ];
     const sql = isPostgres
-        ? `INSERT INTO users (id, name, role, skills, "accessibilityNeeds", credits, password, "emailVerified") VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ? `INSERT INTO users (id, name, role, skills, "accessibilityNeeds", credits, password) VALUES (?, ?, ?, ?, ?, ?, ?)
            ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, role = EXCLUDED.role, skills = EXCLUDED.skills,
-           "accessibilityNeeds" = EXCLUDED."accessibilityNeeds", credits = EXCLUDED.credits, password = EXCLUDED.password, "emailVerified" = EXCLUDED."emailVerified"`
-        : `INSERT OR REPLACE INTO users (id, name, role, skills, accessibilityNeeds, credits, password, emailVerified) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+           "accessibilityNeeds" = EXCLUDED."accessibilityNeeds", credits = EXCLUDED.credits, password = EXCLUDED.password`
+        : `INSERT OR REPLACE INTO users (id, name, role, skills, accessibilityNeeds, credits, password) VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
     try {
         await db.query(sql, params);
