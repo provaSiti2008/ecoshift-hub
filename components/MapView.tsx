@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Trip, StudyGroup } from '../types';
+import { Trip, StudyGroup, UserLocation } from '../types';
 import { MILAN_COORDS, getCoordsWithOffset } from '../constants';
 import { useLanguage } from '../i18n';
 
@@ -10,9 +10,10 @@ interface MapViewProps {
     trips: Trip[];
     studyGroups?: StudyGroup[];
     onTripSelect: (tripId: string) => void;
+    userLocation?: UserLocation | null;
 }
 
-export const MapView: React.FC<MapViewProps> = ({ trips, studyGroups = [] }) => {
+export const MapView: React.FC<MapViewProps> = ({ trips, studyGroups = [], userLocation }) => {
     const { t } = useLanguage();
     const mapContainerRef = useRef<HTMLDivElement>(null);
         const mapInstanceRef = useRef<any>(null);
@@ -143,6 +144,32 @@ export const MapView: React.FC<MapViewProps> = ({ trips, studyGroups = [] }) => 
                 marker.bindPopup(popupContent, { className: 'custom-glass-popup', closeButton: false, offset: [0, -10] });
             });
 
+            // 3. Rendering User Location
+            if (userLocation) {
+                const userIcon = L.divIcon({
+                    className: 'custom-marker user-location',
+                    html: `
+                        <div class="relative flex items-center justify-center">
+                            <div class="absolute w-10 h-10 bg-emerald-500/30 rounded-full animate-pulse"></div>
+                            <div class="absolute w-6 h-6 bg-emerald-400/50 rounded-full animate-ping"></div>
+                            <div class="relative w-6 h-6 bg-emerald-600 border-3 border-white rounded-full flex items-center justify-center shadow-xl">
+                                <span class="text-[12px]">📍</span>
+                            </div>
+                        </div>
+                    `,
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16]
+                });
+
+                const userMarker = L.marker([userLocation.lat, userLocation.lng], { icon: userIcon, zIndexOffset: 1000 }).addTo(markersLayer);
+                userMarker.bindPopup(`
+                    <div class="p-3 bg-white rounded-xl text-center">
+                        <p class="text-xs font-bold text-emerald-600">📍 La tua posizione</p>
+                        ${userLocation.accuracy ? `<p class="text-[10px] text-slate-400 mt-1">Precisione: ${Math.round(userLocation.accuracy)}m</p>` : ''}
+                    </div>
+                `, { className: 'custom-glass-popup', closeButton: false, offset: [0, -10] });
+            }
+
             if (mapInstanceRef.current && !mapInstanceRef.current.hasLayer(markersLayer)) {
                 markersLayer.addTo(mapInstanceRef.current);
             }
@@ -160,6 +187,10 @@ export const MapView: React.FC<MapViewProps> = ({ trips, studyGroups = [] }) => 
                     allCoords.push(coords);
                 }
             });
+            // Aggiungi posizione utente ai bounds se disponibile
+            if (userLocation) {
+                allCoords.push([userLocation.lat, userLocation.lng]);
+            }
             if (allCoords.length > 0 && mapInstanceRef.current && L) {
                 const bounds = L.latLngBounds(allCoords);
                 mapInstanceRef.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
@@ -222,12 +253,12 @@ export const MapView: React.FC<MapViewProps> = ({ trips, studyGroups = [] }) => 
         }, 100);
     }, [isLeafletReady, containerReady]);
 
-    // 3. Aggiorna marker quando cambiano trips/studyGroups
+    // 3. Aggiorna marker quando cambiano trips/studyGroups o userLocation
     useEffect(() => {
         if (!mapInstanceRef.current) return;
         mapInstanceRef.current.invalidateSize();
         updateMarkers(trips, studyGroups);
-    }, [trips, studyGroups, t]);
+    }, [trips, studyGroups, userLocation, t]);
 
     return (
         <div className="bg-white rounded-[3rem] overflow-hidden shadow-2xl border border-slate-200 relative w-full group" style={{ minHeight: 500, height: 600 }}>

@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from './i18n';
 import { LanguageSelector } from './components/LanguageSelector';
 import { Dashboard } from './components/Dashboard';
-import { User } from './types';
+import { User, UserLocation } from './types';
 import { db } from './db';
 import { MOCK_DRIVER_IDS } from './constants';
 import { ProfileModal } from './components/ProfileModal';
@@ -15,6 +15,8 @@ const App: React.FC = () => {
   const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
+  const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'pending'>('pending');
 
   // Custom parsing for hash routing (e.g. #verify-email?token=...)
   const [currentRoute, setCurrentRoute] = useState(window.location.hash);
@@ -93,6 +95,9 @@ const App: React.FC = () => {
           if (latest) {
             handleUserUpdate(latest);
           }
+
+          // Richiedi geolocalizzazione se l'utente è già loggato
+          requestUserLocation();
         }
       } catch (error) {
         console.error("Failed to initialize app:", error);
@@ -141,9 +146,56 @@ const App: React.FC = () => {
     };
   }, [currentUser?.id]); // Ricollega se cambia l'utente
 
+  // Richiedi geolocalizzazione
+  const requestUserLocation = () => {
+    console.log('[App] Richiesta geolocalizzazione...');
+    if (!navigator.geolocation) {
+      console.log('[App] Geolocalizzazione non supportata dal browser');
+      setLocationPermission('denied');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const location: UserLocation = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+          timestamp: position.timestamp
+        };
+        setUserLocation(location);
+        setLocationPermission('granted');
+        console.log('[App] Posizione utente ottenuta:', location);
+      },
+      (error) => {
+        console.log('[App] Permesso geolocalizzazione negato o errore:', error.message);
+        setLocationPermission('denied');
+        setUserLocation(null);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000
+      }
+    );
+  };
+
+  // Richiedi geolocalizzazione quando l'utente è loggato (ma attendi un po' per l'interazione)
+  useEffect(() => {
+    if (currentUser && !userLocation && locationPermission === 'pending') {
+      // Piccolo ritardo per assicurarsi che il browser sia pronto
+      const timer = setTimeout(() => {
+        requestUserLocation();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [currentUser, userLocation, locationPermission]);
+
   const handleLoginSuccess = (user: User) => {
     setCurrentUser(user);
     db.setSession(user);
+    // Richiedi geolocalizzazione dopo il login
+    requestUserLocation();
     // Clear hash if any
     if (window.location.hash) {
       window.history.pushState("", document.title, window.location.pathname + window.location.search);
@@ -153,6 +205,8 @@ const App: React.FC = () => {
   const handleLogout = () => {
     db.setSession(null);
     setCurrentUser(null);
+    setUserLocation(null);
+    setLocationPermission('pending');
   };
 
   if (isLoading) {
@@ -179,6 +233,30 @@ const App: React.FC = () => {
           </div>
           <div className="flex items-center gap-4">
             <LanguageSelector />
+            {userLocation ? (
+              <div className="flex items-center gap-1 text-emerald-600" title="Posizione attiva">
+                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                <span className="text-[10px] font-bold hidden sm:inline">GPS</span>
+              </div>
+            ) : locationPermission === 'denied' ? (
+              <button
+                onClick={requestUserLocation}
+                className="text-[10px] font-bold text-slate-400 hover:text-emerald-600 transition-colors flex items-center gap-1"
+                title="Attiva posizione"
+              >
+                <span>📍</span>
+                <span className="hidden sm:inline">Attiva GPS</span>
+              </button>
+            ) : (
+              <button
+                onClick={requestUserLocation}
+                className="text-[10px] font-bold text-slate-400 hover:text-emerald-600 transition-colors flex items-center gap-1"
+                title="Attiva posizione"
+              >
+                <span>📍</span>
+                <span className="hidden sm:inline">Attiva GPS</span>
+              </button>
+            )}
             <button
               onClick={handleLogout}
               className="text-[10px] font-black text-slate-400 hover:text-rose-600 transition-colors uppercase tracking-widest mr-2"
@@ -207,6 +285,7 @@ const App: React.FC = () => {
           isOfferModalOpen={isOfferModalOpen}
           setIsOfferModalOpen={setIsOfferModalOpen}
           onUserUpdate={handleUserUpdate}
+          userLocation={userLocation}
         />
       </div>
 

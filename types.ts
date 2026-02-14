@@ -68,3 +68,10 @@ export interface Notification {
   type: 'info' | 'success' | 'warning';
   timestamp: string;
 }
+
+export interface UserLocation {
+  lat: number;
+  lng: number;
+  accuracy?: number;
+  timestamp: number;
+}

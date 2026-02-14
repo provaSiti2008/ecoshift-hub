@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useLanguage } from '../i18n';
 import { db } from '../db';
-import { Trip, User, UserRole, StudyGroup } from '../types';
+import { Trip, User, UserRole, StudyGroup, UserLocation } from '../types';
 import { TripCard } from './TripCard';
 import { SubjectDropdown } from './SubjectDropdown';
 import { HelpModal } from './HelpModal';
@@ -77,9 +77,10 @@ interface DashboardProps {
   isOfferModalOpen: boolean;
   setIsOfferModalOpen: (open: boolean) => void;
   onUserUpdate: (user: User) => void;
+  userLocation?: UserLocation | null;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalOpen, setIsOfferModalOpen, onUserUpdate }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalOpen, setIsOfferModalOpen, onUserUpdate, userLocation }) => {
   const { t } = useLanguage();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [studyGroups, setStudyGroups] = useState<StudyGroup[]>([]);
@@ -455,6 +456,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalO
                   : trips.filter(t => t.driverId === currentUser.id || (t.passengerIds && t.passengerIds.includes(currentUser.id)))}
                 studyGroups={activeTab === 'all' ? studyGroups : studyGroups.filter(g => g.creatorId === currentUser.id || g.members.includes(currentUser.id))}
                 onTripSelect={() => { }}
+                userLocation={userLocation}
               />
             ) : filteredTrips.length > 0 || (activeTab === 'trains') ? (
               <div className="grid grid-cols-1 gap-6">
