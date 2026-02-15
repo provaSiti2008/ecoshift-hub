@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from './i18n';
+import { useTheme } from './theme';
 import { LanguageSelector } from './components/LanguageSelector';
 import { Dashboard } from './components/Dashboard';
 import { User, UserLocation } from './types';
@@ -11,6 +12,7 @@ import { AuthScreen } from './components/AuthScreen';
 
 const App: React.FC = () => {
   const { t } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -211,7 +213,7 @@ const App: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-900 transition-colors duration-300">
         <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -222,17 +224,40 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-50 px-4 py-3">
+    <div 
+      className="min-h-screen flex flex-col transition-colors duration-300"
+      style={{
+        backgroundColor: theme === 'dark' ? '#0f172a' : '#ffffff',
+        color: theme === 'dark' ? '#f8fafc' : '#000000'
+      }}
+    >
+      <nav 
+        className="border-b sticky top-0 z-50 px-4 py-3 transition-colors duration-300"
+        style={{
+          backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
+          borderColor: theme === 'dark' ? '#334155' : '#e2e8f0'
+        }}
+      >
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-black text-xl">E</span>
             </div>
-            <span className="font-bold text-xl tracking-tight text-slate-800">{t.app_name}</span>
+            <span className="font-bold text-xl tracking-tight text-slate-800 dark:text-white">{t.app_name}</span>
           </div>
           <div className="flex items-center gap-4">
             <LanguageSelector />
+            <button
+              onClick={() => {
+                console.log('Pulsante tema cliccato!');
+                toggleTheme();
+              }}
+              className="text-[10px] font-bold text-slate-400 hover:text-brand-600 transition-colors flex items-center gap-1 px-3 py-1 rounded-lg border border-slate-300 hover:border-brand-300"
+              title={theme === 'light' ? 'Attiva modalità scura' : 'Attiva modalità chiara'}
+            >
+              <span className="text-lg">{theme === 'light' ? '🌙' : '☀️'}</span>
+              <span className="hidden sm:inline">{theme === 'light' ? 'Scuro' : 'Chiaro'}</span>
+            </button>
             {userLocation ? (
               <div className="flex items-center gap-1 text-emerald-600" title="Posizione attiva">
                 <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
@@ -241,7 +266,7 @@ const App: React.FC = () => {
             ) : locationPermission === 'denied' ? (
               <button
                 onClick={requestUserLocation}
-                className="text-[10px] font-bold text-slate-400 hover:text-emerald-600 transition-colors flex items-center gap-1"
+                className="text-[10px] font-bold text-slate-400 dark:text-slate-300 hover:text-emerald-600 transition-colors flex items-center gap-1"
                 title="Attiva posizione"
               >
                 <span>📍</span>
@@ -250,7 +275,7 @@ const App: React.FC = () => {
             ) : (
               <button
                 onClick={requestUserLocation}
-                className="text-[10px] font-bold text-slate-400 hover:text-emerald-600 transition-colors flex items-center gap-1"
+                className="text-[10px] font-bold text-slate-400 dark:text-slate-300 hover:text-emerald-600 transition-colors flex items-center gap-1"
                 title="Attiva posizione"
               >
                 <span>📍</span>
@@ -259,7 +284,7 @@ const App: React.FC = () => {
             )}
             <button
               onClick={handleLogout}
-              className="text-[10px] font-black text-slate-400 hover:text-rose-600 transition-colors uppercase tracking-widest mr-2"
+              className="text-[10px] font-black text-slate-400 dark:text-slate-300 hover:text-rose-600 transition-colors uppercase tracking-widest mr-2"
               aria-label={t.logout}
             >
               {t.logout}
@@ -296,7 +321,13 @@ const App: React.FC = () => {
         onUpdate={handleUserUpdate}
       />
 
-      <footer className="bg-white border-t border-slate-200 md:hidden sticky bottom-0 z-50">
+      <footer 
+        className="border-t md:hidden sticky bottom-0 z-50 transition-colors duration-300"
+        style={{
+          backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
+          borderColor: theme === 'dark' ? '#334155' : '#e2e8f0'
+        }}
+      >
         <div className="flex justify-around p-3">
           <button className="flex flex-col items-center text-brand-600" aria-label={t.home}>
             <span className="text-xl">🏠</span>
@@ -307,12 +338,12 @@ const App: React.FC = () => {
             className="flex flex-col items-center text-brand-600 font-bold"
             aria-label={t.create_trip_aria}
           >
-            <span className="text-2xl bg-brand-50 p-2 rounded-full mb-1">➕</span>
+            <span className="text-2xl bg-brand-50 dark:bg-brand-900 p-2 rounded-full mb-1">➕</span>
             <span className="text-[10px]">{t.create}</span>
           </button>
           <button
             onClick={() => setIsProfileModalOpen(true)}
-            className="flex flex-col items-center text-slate-400"
+            className="flex flex-col items-center text-slate-400 dark:text-slate-300"
             aria-label={t.profile}
           >
             <span className="text-xl">👤</span>

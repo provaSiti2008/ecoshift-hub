@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { useLanguage } from '../i18n';
+import { useTheme } from '../theme';
 import { db } from '../db';
 import { Trip, User, UserRole, StudyGroup, UserLocation } from '../types';
 import { TripCard } from './TripCard';
@@ -82,6 +83,7 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalOpen, setIsOfferModalOpen, onUserUpdate, userLocation }) => {
   const { t } = useLanguage();
+  const { theme } = useTheme();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [studyGroups, setStudyGroups] = useState<StudyGroup[]>([]);
   const [lastSync, setLastSync] = useState<Date | null>(null);
@@ -276,7 +278,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalO
   };
 
   return (
-    <main className="max-w-4xl mx-auto p-4 md:p-8 pb-32 space-y-10 relative">
+    <main className="max-w-4xl mx-auto p-4 md:p-8 pb-32 space-y-10 relative dark:text-white">
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
       <OfferRideModal
         isOpen={isOfferModalOpen}
@@ -440,7 +442,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalO
             )}
 
             <div className="flex justify-between items-center px-2">
-              <h2 className="text-2xl font-black text-slate-800 tracking-tight">
+              <h2 
+                className="text-2xl font-black tracking-tight"
+                style={{ color: theme === 'dark' ? '#f8fafc' : '#1e293b' }}
+              >
                 {activeTab === 'all' ? t.match_available : t.your_trips}
                 <span className="ml-3 bg-slate-200 text-slate-600 text-xs px-3 py-1 rounded-full">{filteredTrips.length}</span>
               </h2>
