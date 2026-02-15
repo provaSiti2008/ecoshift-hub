@@ -89,6 +89,7 @@ export interface Translations {
 
     // TripCard
     passengers_on_board: string;
+    vehicle_type: string;
     your_proposal: string;
     booked: string;
     seat: string;
@@ -263,6 +264,7 @@ export const translations: Record<Language, Translations> = {
         learn_more: 'Scopri di più',
 
         passengers_on_board: 'Passeggeri a bordo',
+        vehicle_type: 'Auto',
         your_proposal: 'Tua Proposta',
         booked: 'Prenotato',
         seat: 'posto',
@@ -426,6 +428,7 @@ export const translations: Record<Language, Translations> = {
         learn_more: 'Learn more',
 
         passengers_on_board: 'Passengers on board',
+        vehicle_type: 'Car',
         your_proposal: 'Your Proposal',
         booked: 'Booked',
         seat: 'seat',
@@ -589,6 +592,7 @@ export const translations: Record<Language, Translations> = {
         learn_more: 'Saber más',
 
         passengers_on_board: 'Pasajeros a bordo',
+        vehicle_type: 'Auto',
         your_proposal: 'Tu Propuesta',
         booked: 'Reservado',
         seat: 'plaza',
@@ -752,6 +756,7 @@ export const translations: Record<Language, Translations> = {
         learn_more: 'En savoir plus',
 
         passengers_on_board: 'Passagers à bord',
+        vehicle_type: 'Voiture',
         your_proposal: 'Votre Proposition',
         booked: 'Réserver',
         seat: 'siège',
@@ -915,6 +920,7 @@ export const translations: Record<Language, Translations> = {
         learn_more: 'Mehr erfahren',
 
         passengers_on_board: 'Fahrgäste an Bord',
+        vehicle_type: 'Auto',
         your_proposal: 'Dein Vorschlag',
         booked: 'Gebucht',
         seat: 'Platz',
@@ -1078,6 +1084,7 @@ export const translations: Record<Language, Translations> = {
         learn_more: 'Meer weten',
 
         passengers_on_board: 'Passagiers aan boord',
+        vehicle_type: 'Auto',
         your_proposal: 'Jouw Voorstel',
         booked: 'Geboekt',
         seat: 'plaats',

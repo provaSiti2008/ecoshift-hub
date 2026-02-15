@@ -237,7 +237,7 @@ const App: React.FC = () => {
       }}
     >
       <nav 
-        className="border-b sticky top-0 z-50 px-4 py-3 transition-colors duration-300"
+        className="border-b sticky top-0 z-[100] px-4 py-3 transition-colors duration-300"
         style={{
           backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
           borderColor: theme === 'dark' ? '#334155' : '#e2e8f0'

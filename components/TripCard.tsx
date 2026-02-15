@@ -91,6 +91,9 @@ export const TripCard: React.FC<TripCardProps> = ({
                 <p className="text-lg font-black text-slate-900 tracking-tight">{trip.to}</p>
               </div>
             </div>
+            <span className="bg-blue-50 text-blue-700 text-[10px] font-bold px-2.5 py-1 rounded-full border border-blue-100 uppercase tracking-wider flex items-center gap-1">
+              🚗 {t.vehicle_type || 'Auto'}
+            </span>
             {isDriver && (
               <span className="bg-brand-50 text-brand-700 text-[10px] font-bold px-2.5 py-1 rounded-full border border-brand-100 uppercase tracking-wider">
                 {t.your_proposal}
