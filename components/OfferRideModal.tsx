@@ -87,12 +87,13 @@ export const OfferRideModal: React.FC<OfferRideModalProps> = ({ isOpen, onClose,
                 <select
                   required
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus-ring appearance-none"
+                  style={{ color: '#1e293b' }}
                   value={formData.from}
                   onChange={e => setFormData({ ...formData, from: e.target.value })}
                 >
-                  <option value="">{t.select_departure}</option>
+                  <option value="" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>{t.select_departure}</option>
                   {KNOWN_LOCATIONS.map(loc => (
-                    <option key={loc} value={loc}>{loc}</option>
+                    <option key={loc} value={loc} style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>{loc}</option>
                   ))}
                 </select>
               </div>
@@ -101,12 +102,13 @@ export const OfferRideModal: React.FC<OfferRideModalProps> = ({ isOpen, onClose,
                 <select
                   required
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus-ring appearance-none"
+                  style={{ color: '#1e293b' }}
                   value={formData.to}
                   onChange={e => setFormData({ ...formData, to: e.target.value })}
                 >
-                  <option value="">{t.select_destination}</option>
+                  <option value="" style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>{t.select_destination}</option>
                   {KNOWN_LOCATIONS.filter(l => l !== formData.from).map(loc => (
-                    <option key={loc} value={loc}>{loc}</option>
+                    <option key={loc} value={loc} style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>{loc}</option>
                   ))}
                 </select>
               </div>
@@ -120,6 +122,7 @@ export const OfferRideModal: React.FC<OfferRideModalProps> = ({ isOpen, onClose,
                 required
                 type="datetime-local"
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus-ring"
+                style={{ color: '#1e293b' }}
                 value={formData.departureTime}
                 onChange={e => setFormData({ ...formData, departureTime: e.target.value })}
               />
@@ -131,6 +134,7 @@ export const OfferRideModal: React.FC<OfferRideModalProps> = ({ isOpen, onClose,
                 min="1"
                 max="8"
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus-ring"
+                style={{ color: '#1e293b' }}
                 value={formData.seatsAvailable}
                 onChange={e => setFormData({ ...formData, seatsAvailable: parseInt(e.target.value) })}
               />

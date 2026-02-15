@@ -243,7 +243,12 @@ const App: React.FC = () => {
             <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-black text-xl">E</span>
             </div>
-            <span className="font-bold text-xl tracking-tight text-slate-800 dark:text-white">{t.app_name}</span>
+            <span 
+              className="font-bold text-xl tracking-tight"
+              style={{ color: theme === 'dark' ? '#f8fafc' : '#1e293b' }}
+            >
+              {t.app_name}
+            </span>
           </div>
           <div className="flex items-center gap-4">
             <LanguageSelector />

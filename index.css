@@ -9,6 +9,26 @@ body {
   letter-spacing: -0.01em;
 }
 
+/* Fix per opzioni select - testo sempre scuro per leggibilità */
+select option,
+select optgroup,
+option {
+  color: #1e293b !important;
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+}
+
+/* Fix specifico per Firefox e Chrome */
+select {
+  color: #1e293b !important;
+}
+
+select option:hover,
+select option:focus,
+select option:checked {
+  color: #1e293b !important;
+  background-color: #e2e8f0 !important;
+}
 
 
 .focus-ring:focus {
