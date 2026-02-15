@@ -170,6 +170,18 @@ async function initDb() {
     // Column already exists
   }
 
+  // Migration: Add theme column if missing
+  try {
+    if (isPostgres) {
+      await query(`ALTER TABLE users ADD COLUMN theme TEXT`);
+    } else {
+      await query(`ALTER TABLE users ADD COLUMN theme TEXT`);
+    }
+    console.log('Migration: Added theme column to users table');
+  } catch (e) {
+    // Column already exists
+  }
+
   console.log('Database tables initialized.');
 }
 

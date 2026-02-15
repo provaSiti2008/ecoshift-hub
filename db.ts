@@ -65,6 +65,18 @@ class MamaDB {
     return updatedUser;
   }
 
+  async updateUserTheme(userId: string, theme: 'light' | 'dark'): Promise<User | null> {
+    const res = await fetch(`${API_URL}/users/${userId}/theme`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ theme })
+    });
+    if (!res.ok) return null;
+    const updatedUser = await res.json();
+    this.triggerSyncUI();
+    return updatedUser;
+  }
+
   // --- Session ---
   // Session is still local for now to keep it simple, or we could verify with backend.
   // Keeping it local for "login" state persistence across refresh.

@@ -98,6 +98,25 @@ app.post('/api/users/:id/credits', async (req, res) => {
     }
 });
 
+// Endpoint per aggiornare il tema preferito dell'utente
+app.put('/api/users/:id/theme', async (req, res) => {
+    const { theme } = req.body;
+    const sql = `UPDATE users SET theme = ? WHERE id = ?`;
+
+    try {
+        await db.query(sql, [theme, req.params.id]);
+        const rows = await db.query('SELECT * FROM users WHERE id = ?', [req.params.id]);
+        const row = rows[0];
+        if (row) {
+            row.skills = JSON.parse(row.skills || '[]');
+            row.accessibilityNeeds = JSON.parse(row.accessibilityNeeds || '[]');
+        }
+        res.json(row);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // --- Trips ---
 app.get('/api/trips', async (req, res) => {
     try {

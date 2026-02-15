@@ -12,7 +12,7 @@ import { AuthScreen } from './components/AuthScreen';
 
 const App: React.FC = () => {
   const { t } = useLanguage();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, syncThemeWithUser } = useTheme();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -47,6 +47,11 @@ const App: React.FC = () => {
     setCurrentUser(updatedUser);
     db.setSession(updatedUser);
   }, []);
+
+  // Sincronizza tema con l'utente loggato
+  useEffect(() => {
+    syncThemeWithUser(currentUser);
+  }, [currentUser, syncThemeWithUser]);
 
   useEffect(() => {
     const initApp = async () => {
