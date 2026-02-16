@@ -147,7 +147,8 @@ export const StudyGroupChat: React.FC<StudyGroupChatProps> = ({ groupId, current
                     value={newMessage}
                     onChange={e => setNewMessage(e.target.value)}
                     placeholder="Scrivi..."
-                    className="flex-1 px-3 py-1.5 bg-slate-50 rounded-lg text-[10px] font-medium focus:ring-1 focus:ring-indigo-500 outline-none border border-slate-100"
+                    className="flex-1 px-3 py-1.5 bg-slate-50 rounded-lg text-[10px] font-medium text-slate-900 focus:ring-1 focus:ring-indigo-500 outline-none border border-slate-100"
+                    style={{ color: '#1e293b' }}
                 />
                 <button
                     type="submit"
