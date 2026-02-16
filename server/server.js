@@ -6,7 +6,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // --- Auth: register (with verification email) ---
 app.post('/api/auth/register', async (req, res) => {
@@ -252,10 +253,10 @@ app.post('/api/messages', async (req, res) => {
     }
 
     const sql = isPostgres
-        ? `INSERT INTO messages (id, "tripId", "senderId", "senderName", text, timestamp) VALUES (?, ?, ?, ?, ?, ?)`
-        : `INSERT INTO messages (id, tripId, senderId, senderName, text, timestamp) VALUES (?, ?, ?, ?, ?, ?)`;
+        ? `INSERT INTO messages (id, "tripId", "senderId", "senderName", text, timestamp, "attachmentUrl", "attachmentType") VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+        : `INSERT INTO messages (id, tripId, senderId, senderName, text, timestamp, attachmentUrl, attachmentType) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
     try {
-        await db.query(sql, [m.id, m.tripId, m.senderId, m.senderName, m.text, m.timestamp]);
+        await db.query(sql, [m.id, m.tripId, m.senderId, m.senderName, m.text, m.timestamp, m.attachmentUrl || null, m.attachmentType || null]);
         console.log('[API] Message created successfully:', m.id);
         res.json({ message: 'Message sent', id: m.id });
     } catch (err) {
@@ -281,6 +282,57 @@ app.post('/api/credit-logs', async (req, res) => {
         await db.query(sql, [l.id, l.userId, l.amount, l.reason, l.timestamp]);
         res.json({ message: 'Log added' });
     } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- File Upload ---
+app.post('/api/upload', async (req, res) => {
+    const { file, fileName, contentType } = req.body;
+    
+    if (!file || !fileName) {
+        return res.status(400).json({ error: 'Missing file or fileName' });
+    }
+
+    try {
+        const id = Date.now().toString();
+        const createdAt = new Date().toISOString();
+        
+        // Salva nel database come base64 (come tutti gli altri dati)
+        const sql = `INSERT INTO attachments (id, messageId, fileName, contentType, data, createdAt) VALUES (?, ?, ?, ?, ?, ?)`;
+        await db.query(sql, [id, null, fileName, contentType || 'image/jpeg', file, createdAt]);
+        
+        // Costruisci URL per recuperare l'immagine
+        const imageUrl = `http://localhost:${PORT}/api/attachments/${id}`;
+        
+        console.log('[API] File saved to database:', id);
+        res.json({ url: imageUrl, id: id });
+    } catch (err) {
+        console.error('[API] Error uploading file:', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- Get Attachment from Database ---
+app.get('/api/attachments/:id', async (req, res) => {
+    try {
+        const sql = 'SELECT * FROM attachments WHERE id = ?';
+        const rows = await db.query(sql, [req.params.id]);
+        
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Attachment not found' });
+        }
+        
+        const attachment = rows[0];
+        
+        // Decodifica base64 e invia come immagine
+        const imageBuffer = Buffer.from(attachment.data, 'base64');
+        
+        res.set('Content-Type', attachment.contentType);
+        res.set('Cache-Control', 'public, max-age=31536000');
+        res.send(imageBuffer);
+    } catch (err) {
+        console.error('[API] Error retrieving attachment:', err.message);
         res.status(500).json({ error: err.message });
     }
 });

@@ -47,6 +47,8 @@ export interface Message {
   senderName: string;
   text: string;
   timestamp: string;
+  attachmentUrl?: string; // URL dell'immagine allegata
+  attachmentType?: 'image' | 'file'; // Tipo di allegato
 }
 
 export interface StudyGroup {

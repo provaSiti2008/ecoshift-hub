@@ -177,9 +177,38 @@ async function initDb() {
     } else {
       await query(`ALTER TABLE users ADD COLUMN theme TEXT`);
     }
-    console.log('Migration: Added theme column to users table');
+  console.log('Migration: Added theme column to users table');
   } catch (e) {
     // Column already exists
+  }
+
+  // Migration: Add attachment columns to messages if missing
+  try {
+    if (isPostgres) {
+      await query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS "attachmentUrl" TEXT`);
+      await query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS "attachmentType" TEXT`);
+    } else {
+      await query(`ALTER TABLE messages ADD COLUMN attachmentUrl TEXT`);
+      await query(`ALTER TABLE messages ADD COLUMN attachmentType TEXT`);
+    }
+    console.log('Migration: Added attachment columns to messages table');
+  } catch (e) {
+    // Column already exists
+  }
+
+  // Migration: Create attachments table if missing
+  try {
+    await query(`CREATE TABLE IF NOT EXISTS attachments (
+      id TEXT PRIMARY KEY,
+      messageId TEXT,
+      fileName TEXT,
+      contentType TEXT,
+      data TEXT,
+      createdAt TEXT
+    )`);
+    console.log('Migration: Created attachments table');
+  } catch (e) {
+    // Table already exists
   }
 
   console.log('Database tables initialized.');

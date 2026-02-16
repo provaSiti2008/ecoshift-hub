@@ -14,7 +14,9 @@ export const StudyGroupChat: React.FC<StudyGroupChatProps> = ({ groupId, current
     const [isOpen, setIsOpen] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [uploadingImage, setUploadingImage] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const loadMessages = async () => {
         try {
@@ -89,6 +91,72 @@ export const StudyGroupChat: React.FC<StudyGroupChatProps> = ({ groupId, current
         }
     };
 
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Verifica che sia un'immagine
+        if (!file.type.startsWith('image/')) {
+            setError('Per favore seleziona un file immagine (JPEG, PNG, GIF)');
+            return;
+        }
+
+        // Verifica dimensione (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            setError('L\'immagine è troppo grande. Dimensione massima: 5MB');
+            return;
+        }
+
+        setUploadingImage(true);
+        setError(null);
+
+        try {
+            const imageUrl = await db.uploadFile(file);
+            
+            const message: Message = {
+                id: Date.now().toString(),
+                tripId: groupId,
+                senderId: currentUser.id,
+                senderName: currentUser.name,
+                text: '📎 Immagine allegata',
+                timestamp: new Date().toISOString(),
+                attachmentUrl: imageUrl,
+                attachmentType: 'image'
+            };
+
+            await db.sendMessage(message);
+            await loadMessages();
+
+            // Notify other group members
+            const groups = await db.getStudyGroups();
+            const group = groups.find(g => g.id === groupId);
+            if (group) {
+                const recipients = (group.members || []).filter(id => id !== currentUser.id);
+                const uniqueRecipients = [...new Set(recipients)];
+
+                for (const recipientId of uniqueRecipients) {
+                    await db.addNotification({
+                        id: Math.random().toString(),
+                        userId: recipientId,
+                        text: `${currentUser.name} ha condiviso un'immagine nel gruppo "${groupName}"`,
+                        read: false,
+                        type: 'info',
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            }
+        } catch (err) {
+            console.error('Error uploading image:', err);
+            setError('Impossibile caricare l\'immagine. Riprova.');
+        } finally {
+            setUploadingImage(false);
+            // Reset input file
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        }
+    };
+
     if (!isOpen) {
         return (
             <button
@@ -126,12 +194,31 @@ export const StudyGroupChat: React.FC<StudyGroupChatProps> = ({ groupId, current
                         const isMe = msg.senderId === currentUser.id;
                         return (
                             <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                                <div className={`max-w-[90%] px-3 py-1.5 rounded-xl text-[10px] font-medium leading-tight ${isMe
-                                    ? 'bg-indigo-600 text-white rounded-br-none'
-                                    : 'bg-white border border-slate-200 text-slate-700 rounded-bl-none shadow-sm'
-                                    }`}>
-                                    {msg.text}
-                                </div>
+                                {msg.attachmentUrl && msg.attachmentType === 'image' ? (
+                                    <div className={`max-w-[90%] overflow-hidden ${isMe
+                                        ? 'bg-indigo-600 rounded-br-none'
+                                        : 'bg-white border border-slate-200 rounded-bl-none shadow-sm'
+                                        } rounded-xl`}>
+                                        <img 
+                                            src={msg.attachmentUrl} 
+                                            alt="Allegato"
+                                            className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                                            onClick={() => window.open(msg.attachmentUrl, '_blank')}
+                                        />
+                                        {msg.text && msg.text !== '📎 Immagine allegata' && (
+                                            <div className={`px-3 py-1.5 text-[10px] font-medium ${isMe ? 'text-white' : 'text-slate-700'}`}>
+                                                {msg.text}
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className={`max-w-[90%] px-3 py-1.5 rounded-xl text-[10px] font-medium leading-tight ${isMe
+                                        ? 'bg-indigo-600 text-white rounded-br-none'
+                                        : 'bg-white border border-slate-200 text-slate-700 rounded-bl-none shadow-sm'
+                                        }`}>
+                                        {msg.text}
+                                    </div>
+                                )}
                                 <span className="text-[8px] text-slate-400 mt-0.5 mx-1 font-bold">
                                     {isMe ? 'Tu' : msg.senderName}
                                 </span>
@@ -149,10 +236,28 @@ export const StudyGroupChat: React.FC<StudyGroupChatProps> = ({ groupId, current
                     placeholder="Scrivi..."
                     className="flex-1 px-3 py-1.5 bg-slate-50 rounded-lg text-[10px] font-medium text-slate-900 focus:ring-1 focus:ring-indigo-500 outline-none border border-slate-100"
                     style={{ color: '#1e293b' }}
+                    disabled={uploadingImage}
+                />
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                    accept="image/*"
+                    className="hidden"
                 />
                 <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingImage}
+                    className="bg-slate-200 text-slate-600 w-8 h-8 rounded-lg flex items-center justify-center hover:bg-slate-300 transition-all font-bold text-xs disabled:opacity-50"
+                    title="Allega immagine"
+                >
+                    {uploadingImage ? '⏳' : '📷'}
+                </button>
+                <button
                     type="submit"
-                    className="bg-indigo-600 text-white w-8 h-8 rounded-lg flex items-center justify-center hover:bg-indigo-700 transition-all font-black text-xs"
+                    disabled={loading || uploadingImage}
+                    className="bg-indigo-600 text-white w-8 h-8 rounded-lg flex items-center justify-center hover:bg-indigo-700 transition-all font-black text-xs disabled:opacity-50"
                 >
                     ➤
                 </button>

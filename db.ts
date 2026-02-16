@@ -196,6 +196,50 @@ class MamaDB {
     }
   }
 
+  async uploadFile(file: File): Promise<string> {
+    try {
+      // Convert file to base64
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          // Remove data:image/jpeg;base64, prefix
+          const base64Data = result.split(',')[1];
+          resolve(base64Data);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      // Generate unique filename
+      const timestamp = Date.now();
+      const random = Math.random().toString(36).substring(2, 8);
+      const extension = file.name.split('.').pop() || 'jpg';
+      const fileName = `chat-${timestamp}-${random}.${extension}`;
+
+      const res = await fetch(`${API_URL}/upload`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          file: base64,
+          fileName,
+          contentType: file.type
+        })
+      });
+
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(error.error || 'Failed to upload file');
+      }
+
+      const data = await res.json();
+      return data.url;
+    } catch (err) {
+      console.error('Error uploading file:', err);
+      throw err;
+    }
+  }
+
   // --- Notifications ---
   async getNotifications(userId: string): Promise<Notification[]> {
     try {

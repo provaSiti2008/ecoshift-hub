@@ -13,7 +13,9 @@ export const TripChat: React.FC<TripChatProps> = ({ tripId, currentUser }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [uploadingImage, setUploadingImage] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const loadMessages = async () => {
         try {
@@ -88,6 +90,72 @@ export const TripChat: React.FC<TripChatProps> = ({ tripId, currentUser }) => {
         }
     };
 
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Verifica che sia un'immagine
+        if (!file.type.startsWith('image/')) {
+            setError('Per favore seleziona un file immagine (JPEG, PNG, GIF)');
+            return;
+        }
+
+        // Verifica dimensione (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            setError('L\'immagine è troppo grande. Dimensione massima: 5MB');
+            return;
+        }
+
+        setUploadingImage(true);
+        setError(null);
+
+        try {
+            const imageUrl = await db.uploadFile(file);
+            
+            const message: Message = {
+                id: Date.now().toString(),
+                tripId,
+                senderId: currentUser.id,
+                senderName: currentUser.name,
+                text: '📎 Immagine allegata',
+                timestamp: new Date().toISOString(),
+                attachmentUrl: imageUrl,
+                attachmentType: 'image'
+            };
+
+            await db.sendMessage(message);
+            await loadMessages();
+
+            // Notifica gli altri partecipanti
+            const trips = await db.getTrips();
+            const trip = trips.find(t => t.id === tripId);
+            if (trip) {
+                const recipients = [trip.driverId, ...(trip.passengerIds || [])].filter(id => id !== currentUser.id);
+                const uniqueRecipients = [...new Set(recipients)];
+
+                for (const recipientId of uniqueRecipients) {
+                    await db.addNotification({
+                        id: Math.random().toString(),
+                        userId: recipientId,
+                        text: `${currentUser.name} ha condiviso un'immagine nel viaggio per ${trip.to}`,
+                        read: false,
+                        type: 'info',
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            }
+        } catch (err) {
+            console.error('Error uploading image:', err);
+            setError('Impossibile caricare l\'immagine. Riprova.');
+        } finally {
+            setUploadingImage(false);
+            // Reset input file
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        }
+    };
+
     if (!isOpen) {
         return (
             <button
@@ -125,12 +193,31 @@ export const TripChat: React.FC<TripChatProps> = ({ tripId, currentUser }) => {
                         const isMe = msg.senderId === currentUser.id;
                         return (
                             <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                                <div className={`max-w-[85%] px-4 py-2 rounded-2xl text-xs font-medium ${isMe
-                                    ? 'bg-brand-600 text-white rounded-br-none'
-                                    : 'bg-white border border-slate-100 text-slate-700 rounded-bl-none shadow-sm'
-                                    }`}>
-                                    {msg.text}
-                                </div>
+                                {msg.attachmentUrl && msg.attachmentType === 'image' ? (
+                                    <div className={`max-w-[85%] overflow-hidden ${isMe
+                                        ? 'bg-brand-600 rounded-br-none'
+                                        : 'bg-white border border-slate-100 rounded-bl-none shadow-sm'
+                                        } rounded-2xl`}>
+                                        <img 
+                                            src={msg.attachmentUrl} 
+                                            alt="Allegato"
+                                            className="max-w-full h-auto rounded-xl cursor-pointer hover:opacity-90 transition-opacity"
+                                            onClick={() => window.open(msg.attachmentUrl, '_blank')}
+                                        />
+                                        {msg.text && msg.text !== '📎 Immagine allegata' && (
+                                            <div className={`px-4 py-2 text-xs font-medium ${isMe ? 'text-white' : 'text-slate-700'}`}>
+                                                {msg.text}
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className={`max-w-[85%] px-4 py-2 rounded-2xl text-xs font-medium ${isMe
+                                        ? 'bg-brand-600 text-white rounded-br-none'
+                                        : 'bg-white border border-slate-100 text-slate-700 rounded-bl-none shadow-sm'
+                                        }`}>
+                                        {msg.text}
+                                    </div>
+                                )}
                                 <span className="text-[9px] text-slate-400 mt-1 mx-1 font-bold">
                                     {isMe ? 'Tu' : msg.senderName} • {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
@@ -148,10 +235,28 @@ export const TripChat: React.FC<TripChatProps> = ({ tripId, currentUser }) => {
                     placeholder="Scrivi un messaggio..."
                     className="flex-1 px-4 py-2 bg-slate-50 rounded-xl text-xs font-medium text-slate-900 focus:ring-2 focus:ring-brand-500 outline-none"
                     style={{ color: '#1e293b' }}
+                    disabled={uploadingImage}
+                />
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                    accept="image/*"
+                    className="hidden"
                 />
                 <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingImage}
+                    className="bg-slate-200 text-slate-600 w-10 h-10 rounded-xl flex items-center justify-center hover:bg-slate-300 transition-all font-bold disabled:opacity-50"
+                    title="Allega immagine"
+                >
+                    {uploadingImage ? '⏳' : '📷'}
+                </button>
+                <button
                     type="submit"
-                    className="bg-brand-600 text-white w-10 h-10 rounded-xl flex items-center justify-center hover:bg-brand-700 transition-all font-black"
+                    disabled={loading || uploadingImage}
+                    className="bg-brand-600 text-white w-10 h-10 rounded-xl flex items-center justify-center hover:bg-brand-700 transition-all font-black disabled:opacity-50"
                 >
                     ➤
                 </button>
