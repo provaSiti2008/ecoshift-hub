@@ -117,7 +117,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
             </div>
             <div className="flex gap-2">
               <input
-                className="flex-1 px-6 py-4 bg-slate-100 border-none rounded-2xl focus-ring text-sm"
+                className="flex-1 px-6 py-4 bg-slate-100 border-none rounded-2xl focus-ring text-sm text-slate-900 placeholder:text-slate-400"
                 placeholder={t.add_subject}
                 value={newSkill}
                 onChange={e => setNewSkill(e.target.value)}

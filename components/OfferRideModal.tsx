@@ -146,7 +146,7 @@ export const OfferRideModal: React.FC<OfferRideModalProps> = ({ isOpen, onClose,
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-1">{t.subject_optional}</label>
               <input
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus-ring"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus-ring text-slate-900 placeholder:text-slate-400"
                 placeholder="Es: Analisi 1, Fisica..."
                 value={formData.tutoringSubject}
                 onChange={e => setFormData({ ...formData, tutoringSubject: e.target.value })}
