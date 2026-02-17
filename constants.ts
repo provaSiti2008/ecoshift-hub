@@ -32,7 +32,49 @@ export const MILAN_COORDS: Record<string, [number, number]> = {
     'Molino Dorino': [45.5080, 9.1280],
 };
 
-export const KNOWN_LOCATIONS = Object.keys(MILAN_COORDS).sort();
+/** Mappa i nomi duplicati/sinonimi al nome standard */
+export const LOCATION_SYNONYMS: Record<string, string> = {
+    'Milano Centrale': 'Stazione Centrale',
+    'Centrale': 'Stazione Centrale',
+    'Cadorna FN': 'Cadorna',
+    'Citta Studi': 'Città Studi',
+    'Leonardo': 'Piazza Leonardo',
+    'Sesto': 'Sesto San Giovanni',
+    'Rho': 'Rho Fiera',
+    'Bovisa': 'Campus Bovisa',
+    'Garibaldi FS': 'Garibaldi',
+};
+
+/** Normalizza un nome di stazione al nome standard */
+export function normalizeLocation(name: string): string {
+    if (!name) return name;
+    return LOCATION_SYNONYMS[name] || name;
+}
+
+/** Lista unica di stazioni per il dropdown (senza duplicati) */
+export const KNOWN_LOCATIONS = Array.from(
+    new Set([
+        'Stazione Centrale',
+        'Piazza Leonardo',
+        'Città Studi',
+        'Duomo',
+        'Sesto San Giovanni',
+        'Rho Fiera',
+        'Campus Bovisa',
+        'San Donato',
+        'Porta Genova',
+        'Cadorna',
+        'Garibaldi',
+        'Romolo',
+        'Bicocca',
+        'Lambrate',
+        'Porta Venezia',
+        'Repubblica',
+        'Loreto',
+        'Lampugnano',
+        'Molino Dorino',
+    ])
+).sort();
 
 /** Restituisce coordinate [lat, lng] per un luogo e un offset deterministico basato su id (per evitare sovrapposizioni). */
 export function getCoordsWithOffset(locationName: string, uniqueId: string): { coords: [number, number]; label: string } {

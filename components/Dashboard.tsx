@@ -135,6 +135,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalO
     const sortedTrips = realTrips.sort((a, b) => new Date(a.departureTime).getTime() - new Date(b.departureTime).getTime());
     setTrips(sortedTrips);
     setStudyGroups(realGroups);
+    setLastSync(new Date());
   };
 
   useEffect(() => {
@@ -211,7 +212,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalO
             .replace('{name}', currentUser.name)
             .replace('{seats}', seats.toString())
             .replace('{seatLabel}', seats === 1 ? t.seat : t.seats)
-            .replace('{to}', trip.to),
+            .replace('{to}', trip.to || t.unknown_destination),
           read: false,
           type: 'success',
           timestamp: new Date().toISOString()
@@ -219,6 +220,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalO
 
         setBookingMessage({ text: t.booking_success.replace('{credits}', earnedCredits.toString()), type: 'success' });
         setTimeout(() => setBookingMessage(null), 3000);
+        setLastSync(new Date());
       }
     }
   };
@@ -241,7 +243,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalO
         userId: trip.driverId,
         text: t.cancel_notification
           .replace('{name}', currentUser.name)
-          .replace('{to}', trip.to),
+          .replace('{to}', trip.to || t.unknown_destination),
         read: false,
         type: 'warning',
         timestamp: new Date().toISOString()
@@ -249,6 +251,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalO
 
       setBookingMessage({ text: t.participation_cancelled, type: 'error' });
       setTimeout(() => setBookingMessage(null), 3000);
+      setLastSync(new Date());
     }
   };
 
@@ -265,7 +268,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalO
         await db.addNotification({
           id: Math.random().toString(),
           userId: pid,
-          text: t.trip_cancelled_notification.replace('{to}', trip.to),
+          text: t.trip_cancelled_notification.replace('{to}', trip.to || t.unknown_destination),
           read: false,
           type: 'warning',
           timestamp: new Date().toISOString()
@@ -275,6 +278,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalO
 
     setBookingMessage({ text: t.commitment_removed, type: 'error' });
     setTimeout(() => setBookingMessage(null), 3000);
+    setLastSync(new Date());
   };
 
   return (

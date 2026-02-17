@@ -86,7 +86,7 @@ export const StudyGroupChat: React.FC<StudyGroupChatProps> = ({ groupId, current
                     await db.addNotification({
                         id: Math.random().toString(),
                         userId: recipientId,
-                        text: `Nuovo messaggio nel gruppo "${groupName}" da ${currentUser.name}`,
+                        text: `Nuovo messaggio nel gruppo "${groupName || 'Gruppo sconosciuto'}" da ${currentUser.name}`,
                         read: false,
                         type: 'info',
                         timestamp: new Date().toISOString()

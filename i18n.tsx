@@ -165,6 +165,11 @@ export interface Translations {
     social_inclusion: string;
     assist_special_needs: string;
     publish_trip: string;
+    error_select_departure: string;
+    error_select_destination: string;
+    error_select_datetime: string;
+    error_past_datetime: string;
+    error_same_location: string;
 
     // Common
     loading: string;
@@ -183,6 +188,7 @@ export interface Translations {
     booking_notification: string;
     cancel_notification: string;
     trip_cancelled_notification: string;
+    unknown_destination: string;
     participation_cancelled: string;
     commitment_removed: string;
 }
@@ -335,6 +341,11 @@ export const translations: Record<Language, Translations> = {
         social_inclusion: 'Inclusione Sociale (M5)',
         assist_special_needs: 'Offro assistenza per bisogni speciali',
         publish_trip: 'Pubblica Viaggio 🚀',
+        error_select_departure: 'Seleziona un punto di partenza',
+        error_select_destination: 'Seleziona una destinazione',
+        error_select_datetime: 'Seleziona data e ora',
+        error_past_datetime: 'La data non può essere nel passato',
+        error_same_location: 'Partenza e destinazione devono essere diverse',
 
         loading: 'Caricamento...',
         success: 'Successo',
@@ -350,7 +361,8 @@ export const translations: Record<Language, Translations> = {
         booking_notification: '{name} ha prenotato {seats} {seatLabel} per {to}!',
         cancel_notification: '{name} ha annullato la prenotazione per {to}.',
         trip_cancelled_notification: 'Il viaggio per {to} è stato cancellato dal driver.',
-        participation_cancelled: 'Partecipazione annullata.',
+        unknown_destination: 'Destinazione sconosciuta',
+        participation_cancelled: 'Partecipazione annollata.',
         commitment_removed: 'Impegno rimosso.'
     },
     en: {
@@ -499,6 +511,11 @@ export const translations: Record<Language, Translations> = {
         social_inclusion: 'Social Inclusion (M5)',
         assist_special_needs: 'Offered assistance for special needs',
         publish_trip: 'Publish Trip 🚀',
+        error_select_departure: 'Please select a departure point',
+        error_select_destination: 'Please select a destination',
+        error_select_datetime: 'Please select date and time',
+        error_past_datetime: 'Date cannot be in the past',
+        error_same_location: 'Departure and destination must be different',
 
         loading: 'Loading...',
         success: 'Success',
@@ -514,6 +531,7 @@ export const translations: Record<Language, Translations> = {
         booking_notification: '{name} booked {seats} {seatLabel} to {to}!',
         cancel_notification: '{name} cancelled the booking to {to}.',
         trip_cancelled_notification: 'The trip to {to} was cancelled by the driver.',
+        unknown_destination: 'Unknown destination',
         participation_cancelled: 'Participation cancelled.',
         commitment_removed: 'Commitment removed.'
     },
@@ -663,6 +681,11 @@ export const translations: Record<Language, Translations> = {
         social_inclusion: 'Inclusión Social (M5)',
         assist_special_needs: 'Ofrezco asistencia para necesidades especiales',
         publish_trip: 'Publicar Viaje 🚀',
+        error_select_departure: 'Selecciona un punto de partida',
+        error_select_destination: 'Selecciona un destino',
+        error_select_datetime: 'Selecciona fecha y hora',
+        error_past_datetime: 'La fecha no puede ser en el pasado',
+        error_same_location: 'La salida y el destino deben ser diferentes',
 
         loading: 'Cargando...',
         success: 'Éxito',
@@ -678,6 +701,7 @@ export const translations: Record<Language, Translations> = {
         booking_notification: '¡{name} reservó {seats} {seatLabel} para {to}!',
         cancel_notification: '{name} canceló la reserva para {to}.',
         trip_cancelled_notification: 'El viaje para {to} fue cancelado por el conductor.',
+        unknown_destination: 'Destino desconocido',
         participation_cancelled: 'Participación cancelada.',
         commitment_removed: 'Compromiso eliminado.'
     },
@@ -827,6 +851,11 @@ export const translations: Record<Language, Translations> = {
         social_inclusion: 'Inclusion Sociale (M5)',
         assist_special_needs: 'J\'offre de l\'aide pour les besoins spéciaux',
         publish_trip: 'Publier Trajet 🚀',
+        error_select_departure: 'Veuillez sélectionner un point de départ',
+        error_select_destination: 'Veuillez sélectionner une destination',
+        error_select_datetime: 'Veuillez sélectionner une date et heure',
+        error_past_datetime: 'La date ne peut pas être dans le passé',
+        error_same_location: 'Le départ et la destination doivent être différents',
 
         loading: 'Chargement...',
         success: 'Succès',
@@ -842,6 +871,7 @@ export const translations: Record<Language, Translations> = {
         booking_notification: '{name} a réservé {seats} {seatLabel} pour {to} !',
         cancel_notification: '{name} a annulé la réservation pour {to}.',
         trip_cancelled_notification: 'Le trajet pour {to} a été annulé par le conducteur.',
+        unknown_destination: 'Destination inconnue',
         participation_cancelled: 'Participation annulée.',
         commitment_removed: 'Engagement supprimé.'
     },
@@ -991,6 +1021,11 @@ export const translations: Record<Language, Translations> = {
         social_inclusion: 'Soziale Inklusion (M5)',
         assist_special_needs: 'Ich biete Unterstützung bei besonderen Bedürfnissen an',
         publish_trip: 'Fahrt veröffentlichen 🚀',
+        error_select_departure: 'Bitte wählen Sie einen Abfahrtsort',
+        error_select_destination: 'Bitte wählen Sie ein Ziel',
+        error_select_datetime: 'Bitte wählen Sie Datum und Uhrzeit',
+        error_past_datetime: 'Das Datum kann nicht in der Vergangenheit liegen',
+        error_same_location: 'Abfahrt und Ziel müssen unterschiedlich sein',
 
         loading: 'Laden...',
         success: 'Erfolgreich',
@@ -1006,6 +1041,7 @@ export const translations: Record<Language, Translations> = {
         booking_notification: '{name} hat {seats} {seatLabel} nach {to} gebucht!',
         cancel_notification: '{name} hat die Buchung nach {to} storniert.',
         trip_cancelled_notification: 'Die Fahrt nach {to} wurde vom Fahrer storniert.',
+        unknown_destination: 'Unbekanntes Ziel',
         participation_cancelled: 'Teilnahme storniert.',
         commitment_removed: 'Zusage entfernt.'
     },
@@ -1155,6 +1191,11 @@ export const translations: Record<Language, Translations> = {
         social_inclusion: 'Sociale Inclusie (M5)',
         assist_special_needs: 'Ik bied hulp bij speciale behoeften',
         publish_trip: 'Reis Publiceren 🚀',
+        error_select_departure: 'Selecteer een vertrekpunt',
+        error_select_destination: 'Selecteer een bestemming',
+        error_select_datetime: 'Selecteer datum en tijd',
+        error_past_datetime: 'Datum kan niet in het verleden liggen',
+        error_same_location: 'Vertrek en bestemming moeten verschillend zijn',
 
         loading: 'Laden...',
         success: 'Succes',
@@ -1170,6 +1211,7 @@ export const translations: Record<Language, Translations> = {
         booking_notification: '{name} heeft {seats} {seatLabel} naar {to} geboekt!',
         cancel_notification: '{name} heeft de boeking naar {to} geannuleerd.',
         trip_cancelled_notification: 'De reis naar {to} is geannuleerd door de chauffeur.',
+        unknown_destination: 'Onbekende bestemming',
         participation_cancelled: 'Deelname geannuleerd.',
         commitment_removed: 'Verbintenis verwijderd.'
     }

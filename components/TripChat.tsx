@@ -85,7 +85,7 @@ export const TripChat: React.FC<TripChatProps> = ({ tripId, currentUser }) => {
                     await db.addNotification({
                         id: Math.random().toString(),
                         userId: recipientId,
-                        text: `Nuovo messaggio da ${currentUser.name} nel viaggio per ${trip.to}`,
+                        text: `Nuovo messaggio da ${currentUser.name} nel viaggio per ${trip.to || 'Destinazione sconosciuta'}`,
                         read: false,
                         type: 'info',
                         timestamp: new Date().toISOString()

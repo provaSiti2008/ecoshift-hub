@@ -9,6 +9,7 @@ import { db } from './db';
 import { MOCK_DRIVER_IDS } from './constants';
 import { ProfileModal } from './components/ProfileModal';
 import { AuthScreen } from './components/AuthScreen';
+import { migrateStationNames, isMigrationDone, markMigrationDone } from './migrate-stations';
 
 const App: React.FC = () => {
   const { t } = useLanguage();
@@ -56,6 +57,12 @@ const App: React.FC = () => {
   useEffect(() => {
     const initApp = async () => {
       try {
+        // 0. Migrazione nomi stazioni (una sola volta)
+        if (!isMigrationDone()) {
+          await migrateStationNames();
+          markMigrationDone();
+        }
+
         // 1. Archiviazione automatica viaggi scaduti (pulizia del database)
         const allTrips = await db.getTrips();
         const now = new Date();

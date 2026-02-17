@@ -25,12 +25,56 @@ export const OfferRideModal: React.FC<OfferRideModalProps> = ({ isOpen, onClose,
     distanceKm: 10
   });
 
+  const [errors, setErrors] = useState<{
+    from?: string;
+    to?: string;
+    departureTime?: string;
+  }>({});
+
   if (!isOpen) return null;
+
+  const validateForm = (): boolean => {
+    const newErrors: typeof errors = {};
+    
+    if (!formData.from) {
+      newErrors.from = t.error_select_departure;
+    }
+    if (!formData.to) {
+      newErrors.to = t.error_select_destination;
+    }
+    if (!formData.departureTime) {
+      newErrors.departureTime = t.error_select_datetime;
+    } else {
+      const tripDate = new Date(formData.departureTime);
+      if (tripDate < new Date()) {
+        newErrors.departureTime = t.error_past_datetime;
+      }
+    }
+    if (formData.from && formData.to && formData.from === formData.to) {
+      newErrors.to = t.error_same_location;
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) return;
 
     const reward = 50;
+    
+    // Capitalizza la materia (Fisica, Analisi 1, etc.)
+    const capitalizeSubject = (subject: string): string => {
+      if (!subject) return '';
+      return subject
+        .toLowerCase()
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    };
+    
     const newTrip: Trip = {
       id: Math.random().toString(36).substr(2, 9),
       driverId: currentUser.id,
@@ -41,7 +85,7 @@ export const OfferRideModal: React.FC<OfferRideModalProps> = ({ isOpen, onClose,
       seatsAvailable: formData.seatsAvailable,
       distanceKm: formData.distanceKm,
       co2Saved: Math.round(formData.distanceKm * 0.3 * 10) / 10,
-      tutoringSubject: formData.tutoringSubject || undefined,
+      tutoringSubject: formData.tutoringSubject ? capitalizeSubject(formData.tutoringSubject.trim()) : undefined,
       assistanceOffered: formData.assistanceOffered,
       passengerIds: []
     };
@@ -79,14 +123,28 @@ export const OfferRideModal: React.FC<OfferRideModalProps> = ({ isOpen, onClose,
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-6 overflow-y-auto">
+          {/* Banner errore generale */}
+          {Object.keys(errors).length > 0 && (
+            <div className="bg-rose-50 border-2 border-rose-400 rounded-2xl p-4 flex items-start gap-3">
+              <span className="text-2xl">⚠️</span>
+              <div>
+                <p className="font-bold text-rose-700">Correggi gli errori seguenti:</p>
+                <ul className="text-sm text-rose-600 mt-1 list-disc list-inside">
+                  {errors.from && <li>{errors.from}</li>}
+                  {errors.to && <li>{errors.to}</li>}
+                  {errors.departureTime && <li>{errors.departureTime}</li>}
+                </ul>
+              </div>
+            </div>
+          )}
+          
           <div className="space-y-4">
             <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">{t.route_details}</h3>
             <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1">{t.departure_point}</label>
                 <select
-                  required
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus-ring appearance-none"
+                  className={`w-full px-4 py-3 bg-slate-50 border rounded-xl focus-ring appearance-none ${errors.from ? 'border-rose-400 ring-2 ring-rose-400' : 'border-slate-200'}`}
                   style={{ color: '#1e293b' }}
                   value={formData.from}
                   onChange={e => setFormData({ ...formData, from: e.target.value })}
@@ -96,12 +154,17 @@ export const OfferRideModal: React.FC<OfferRideModalProps> = ({ isOpen, onClose,
                     <option key={loc} value={loc} style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>{loc}</option>
                   ))}
                 </select>
+                {errors.from && (
+                  <div className="flex items-center gap-1 mt-2 px-2 py-1 bg-rose-50 border border-rose-200 rounded-lg">
+                    <span className="text-rose-500 text-sm">⚠️</span>
+                    <span className="text-rose-600 text-xs font-semibold">{errors.from}</span>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1">{t.destination_point}</label>
                 <select
-                  required
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus-ring appearance-none"
+                  className={`w-full px-4 py-3 bg-slate-50 border rounded-xl focus-ring appearance-none ${errors.to ? 'border-rose-400 ring-2 ring-rose-400' : 'border-slate-200'}`}
                   style={{ color: '#1e293b' }}
                   value={formData.to}
                   onChange={e => setFormData({ ...formData, to: e.target.value })}
@@ -111,6 +174,12 @@ export const OfferRideModal: React.FC<OfferRideModalProps> = ({ isOpen, onClose,
                     <option key={loc} value={loc} style={{ color: '#1e293b', backgroundColor: '#ffffff' }}>{loc}</option>
                   ))}
                 </select>
+                {errors.to && (
+                  <div className="flex items-center gap-1 mt-2 px-2 py-1 bg-rose-50 border border-rose-200 rounded-lg">
+                    <span className="text-rose-500 text-sm">⚠️</span>
+                    <span className="text-rose-600 text-xs font-semibold">{errors.to}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -119,13 +188,18 @@ export const OfferRideModal: React.FC<OfferRideModalProps> = ({ isOpen, onClose,
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-1">{t.date_time}</label>
               <input
-                required
                 type="datetime-local"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus-ring"
+                className={`w-full px-4 py-3 bg-slate-50 border rounded-xl focus-ring ${errors.departureTime ? 'border-rose-400 ring-2 ring-rose-400' : 'border-slate-200'}`}
                 style={{ color: '#1e293b' }}
                 value={formData.departureTime}
                 onChange={e => setFormData({ ...formData, departureTime: e.target.value })}
               />
+              {errors.departureTime && (
+                <div className="flex items-center gap-1 mt-2 px-2 py-1 bg-rose-50 border border-rose-200 rounded-lg">
+                  <span className="text-rose-500 text-sm">⚠️</span>
+                  <span className="text-rose-600 text-xs font-semibold">{errors.departureTime}</span>
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-1">{t.available_seats}</label>

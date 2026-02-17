@@ -1,4 +1,5 @@
 import { User, Trip, CreditLog, Message, Notification, StudyGroup } from './types';
+import { normalizeLocation } from './constants';
 
 const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3000/api';
 
@@ -100,10 +101,17 @@ class MamaDB {
   }
 
   async saveTrip(trip: Trip): Promise<void> {
+    // Normalizza i nomi delle stazioni prima di salvare
+    const normalizedTrip = {
+      ...trip,
+      from: normalizeLocation(trip.from),
+      to: normalizeLocation(trip.to)
+    };
+    
     await fetch(`${API_URL}/trips`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(trip)
+      body: JSON.stringify(normalizedTrip)
     });
     this.triggerSyncUI();
   }
