@@ -1,15 +1,4 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "Supabase": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@supabase/mcp-server-supabase@latest",
-        "--access-token",
-        "sbp_b153d2f64af4fd107cc3b178fe131c2b1c45ba2e"
-      ]
-    }
-  }
+  "mcp": {}
 }

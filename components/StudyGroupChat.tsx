@@ -8,6 +8,16 @@ interface StudyGroupChatProps {
     groupName: string;
 }
 
+// Helper per convertire URL localhost in URL relativi
+const normalizeAttachmentUrl = (url: string | undefined): string | undefined => {
+    if (!url) return url;
+    // Se l'URL inizia con http://localhost:3000, rimuovilo
+    if (url.startsWith('http://localhost:3000')) {
+        return url.replace('http://localhost:3000', '');
+    }
+    return url;
+};
+
 export const StudyGroupChat: React.FC<StudyGroupChatProps> = ({ groupId, currentUser, groupName }) => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
@@ -199,11 +209,11 @@ export const StudyGroupChat: React.FC<StudyGroupChatProps> = ({ groupId, current
                                         ? 'bg-indigo-600 rounded-br-none'
                                         : 'bg-white border border-slate-200 rounded-bl-none shadow-sm'
                                         } rounded-xl`}>
-                                        <img 
-                                            src={msg.attachmentUrl} 
+                                        <img
+                                            src={normalizeAttachmentUrl(msg.attachmentUrl)}
                                             alt="Allegato"
                                             className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                                            onClick={() => window.open(msg.attachmentUrl, '_blank')}
+                                            onClick={() => window.open(normalizeAttachmentUrl(msg.attachmentUrl), '_blank')}
                                         />
                                         {msg.text && msg.text !== '📎 Immagine allegata' && (
                                             <div className={`px-3 py-1.5 text-[10px] font-medium ${isMe ? 'text-white' : 'text-slate-700'}`}>

@@ -302,8 +302,8 @@ app.post('/api/upload', async (req, res) => {
         const sql = `INSERT INTO attachments (id, messageId, fileName, contentType, data, createdAt) VALUES (?, ?, ?, ?, ?, ?)`;
         await db.query(sql, [id, null, fileName, contentType || 'image/jpeg', file, createdAt]);
         
-        // Costruisci URL per recuperare l'immagine
-        const imageUrl = `http://localhost:${PORT}/api/attachments/${id}`;
+        // Costruisci URL per recuperare l'immagine (URL relativo per funzionare sia in locale che su Vercel)
+        const imageUrl = `/api/attachments/${id}`;
         
         console.log('[API] File saved to database:', id);
         res.json({ url: imageUrl, id: id });
