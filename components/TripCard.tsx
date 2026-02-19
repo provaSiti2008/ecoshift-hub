@@ -36,14 +36,14 @@ const PassengerList: React.FC<{ passengerIds: string[] }> = ({ passengerIds }) =
   if (names.length === 0) return null;
 
   return (
-    <div className="mt-4 pt-3 border-t border-slate-100">
-      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+    <div className="mt-6 pt-4 border-t border-slate-200/30 dark:border-slate-700/30">
+      <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">
         {t.passengers_on_board} ({names.length})
       </p>
       <div className="flex flex-wrap gap-2">
         {names.map((name, idx) => (
-          <span key={idx} className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-full pl-1 pr-3 py-1 text-xs font-medium text-slate-600">
-            <div className="w-5 h-5 bg-slate-200 rounded-full flex items-center justify-center text-[9px] font-bold text-slate-500 overflow-hidden">
+          <span key={idx} className="flex items-center gap-2 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50 rounded-full pl-1 pr-3 py-1 text-xs font-semibold text-slate-600 dark:text-slate-300 backdrop-blur-sm">
+            <div className="w-5 h-5 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 rounded-full flex items-center justify-center text-[9px] font-bold text-slate-500 dark:text-slate-300">
               {name.charAt(0)}
             </div>
             {name}
@@ -68,69 +68,81 @@ export const TripCard: React.FC<TripCardProps> = ({
 
   return (
     <article
-      className={`bg-white rounded-3xl p-6 border border-slate-200/60 shadow-sm hover:shadow-xl hover:border-brand-200 transition-all duration-300 group ${!isAvailable && !isPassenger && !isDriver ? 'opacity-60 grayscale-[0.3]' : ''}`}
+      className={`glass-card p-6 md:p-8 bg-white dark:bg-slate-800/40 relative overflow-hidden group transition-all duration-300 hover:-translate-y-1 hover:shadow-neon ${!isAvailable && !isPassenger && !isDriver ? 'opacity-60 grayscale-[0.3]' : ''}`}
       tabIndex={0}
     >
-      <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+      {/* Decorative gradient blob */}
+      <div className="absolute -top-20 -right-20 w-40 h-40 bg-brand-500/10 rounded-full blur-3xl group-hover:bg-brand-500/20 transition-all duration-500"></div>
 
-        {/* Main Route Info: Partenza e Arrivo in evidenza */}
-        <div className="flex-1 space-y-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{t.departure_point}</p>
-                <p className="text-lg font-black text-slate-900 tracking-tight">{trip.from}</p>
-              </div>
-              <div className="flex items-center px-1">
-                <div className="h-[2px] w-3 sm:w-6 bg-brand-300"></div>
-                <span className="mx-1 text-slate-400" aria-hidden>→</span>
-                <div className="h-[2px] w-3 sm:w-6 bg-brand-300"></div>
-              </div>
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{t.destination_point}</p>
-                <p className="text-lg font-black text-slate-900 tracking-tight">{trip.to}</p>
-              </div>
-            </div>
-            <span className="bg-blue-50 text-blue-700 text-[10px] font-bold px-2.5 py-1 rounded-full border border-blue-100 uppercase tracking-wider flex items-center gap-1">
-              🚗 {t.vehicle_type || 'Auto'}
-            </span>
-            {isDriver && (
-              <span className="bg-brand-50 text-brand-700 text-[10px] font-bold px-2.5 py-1 rounded-full border border-brand-100 uppercase tracking-wider">
-                {t.your_proposal}
-              </span>
-            )}
-            {isPassenger && !isDriver && (
-              <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2.5 py-1 rounded-full border border-emerald-100 uppercase tracking-wider">
-                {t.booked}
-              </span>
-            )}
-          </div>
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 relative z-10">
 
-          <div className="flex flex-wrap items-center gap-y-2 gap-x-6 text-sm font-medium text-slate-500">
-            <div className="flex items-center gap-2">
-              <span className="opacity-60 text-base">📅</span>
-              {new Date(trip.departureTime).toLocaleDateString(language, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+        {/* Main Route Info */}
+        <div className="flex-1 space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            {/* Route Timeline */}
+            <div className="flex items-center gap-3 bg-slate-50/80 dark:bg-slate-900/50 p-1.5 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-sm">
+              <div className="bg-white dark:bg-slate-800 px-4 py-2 rounded-xl shadow-sm">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t.departure_point}</p>
+                <p className="text-lg font-black text-slate-800 dark:text-white leading-tight">{trip.from}</p>
+              </div>
+              <div className="flex flex-col items-center px-1 opacity-40">
+                <span className="text-[8px] font-black tracking-widest text-slate-400">VIA</span>
+                <div className="w-8 h-0.5 bg-slate-300 dark:bg-slate-600 my-0.5"></div>
+              </div>
+              <div className="bg-white dark:bg-slate-800 px-4 py-2 rounded-xl shadow-sm">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t.destination_point}</p>
+                <p className="text-lg font-black text-slate-800 dark:text-white leading-tight">{trip.to}</p>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="opacity-60 text-base">👥</span>
-              {trip.seatsAvailable} {trip.seatsAvailable === 1 ? t.seat : t.seats}
-            </div>
-            <div className="flex items-center gap-2 text-emerald-600 font-semibold">
-              <span className="text-base">🌿</span>
-              -{trip.co2Saved}{t.co2_saved_kg}
+
+            <div className="flex flex-wrap gap-2">
+              {isDriver && (
+                <span className="bg-brand-500 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg shadow-brand-500/30 uppercase tracking-wider">
+                  {t.your_proposal}
+                </span>
+              )}
+              {isPassenger && !isDriver && (
+                <span className="bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg shadow-emerald-500/30 uppercase tracking-wider">
+                  {t.booked}
+                </span>
+              )}
+              <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-bold px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700 uppercase tracking-wider flex items-center gap-1">
+                {t.vehicle_type || 'Auto'}
+              </span>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 pt-1">
+          <div className="flex flex-wrap items-center gap-6 text-sm font-semibold text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                📅
+              </div>
+              <span>{new Date(trip.departureTime).toLocaleDateString(language, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                👥
+              </div>
+              <span>{trip.seatsAvailable} {trip.seatsAvailable === 1 ? t.seat : t.seats}</span>
+            </div>
+            <div className="flex items-center gap-2.5 text-emerald-600 dark:text-emerald-400">
+              <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
+                🌿
+              </div>
+              <span>-{trip.co2Saved}{t.co2_saved_kg}</span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
             {trip.tutoringSubject && (
-              <span className="bg-blue-50/50 text-blue-700 px-3 py-1.5 rounded-xl text-xs font-bold border border-blue-100/50 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></span>
+              <span className="bg-blue-50/50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-3 py-1.5 rounded-xl text-xs font-bold border border-blue-100/50 dark:border-blue-800/30 flex items-center gap-2 backdrop-blur-sm">
+                <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
                 {t.mission_4_tutoring.replace('{subject}', trip.tutoringSubject)}
               </span>
             )}
             {trip.assistanceOffered && (
-              <span className="bg-orange-50/50 text-orange-700 px-3 py-1.5 rounded-xl text-xs font-bold border border-orange-100/50 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-orange-400 rounded-full"></span>
+              <span className="bg-orange-50/50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 px-3 py-1.5 rounded-xl text-xs font-bold border border-orange-100/50 dark:border-orange-800/30 flex items-center gap-2 backdrop-blur-sm">
+                <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
                 {t.mission_5_inclusion}
               </span>
             )}
@@ -138,25 +150,34 @@ export const TripCard: React.FC<TripCardProps> = ({
         </div>
 
         {/* Action Column */}
-        <div className="flex flex-col items-center md:items-end justify-between min-h-[120px] gap-4">
+        <div className="flex flex-col items-start md:items-end justify-between min-h-[140px] gap-6 w-full md:w-auto mt-4 md:mt-0 border-t md:border-t-0 pt-4 md:pt-0 border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-3">
-            <div className="text-right hidden sm:block">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t.driver_label}</p>
-              <p className="text-sm font-bold text-slate-800">{isDriver ? t.me : trip.driverName}</p>
+            <div className="text-right hidden md:block">
+              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{t.driver_label}</p>
+              <p className="text-sm font-bold text-slate-800 dark:text-white">{isDriver ? t.me : trip.driverName}</p>
             </div>
-            <img
-              src={`https://picsum.photos/seed/${trip.driverId}/64/64`}
-              alt={trip.driverName}
-              className="w-10 h-10 rounded-2xl border-2 border-white shadow-sm ring-1 ring-slate-100 object-cover"
-            />
+            <div className="relative">
+              <img
+                src={`https://picsum.photos/seed/${trip.driverId}/64/64`}
+                alt={trip.driverName}
+                className="w-12 h-12 rounded-2xl border-2 border-white dark:border-slate-700 shadow-md object-cover"
+              />
+              {!isDriver && (
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-800 flex items-center justify-center text-[8px] text-white">✓</div>
+              )}
+            </div>
+            <div className="block md:hidden">
+              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{t.driver_label}</p>
+              <p className="text-sm font-bold text-slate-800 dark:text-white">{isDriver ? t.me : trip.driverName}</p>
+            </div>
           </div>
 
-          <div className="w-full flex gap-2">
+          <div className="w-full flex gap-3">
             {!isDriver && !isPassenger && (
               <button
                 disabled={!isAvailable}
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); onQuickBook?.(trip.id, 1); }}
-                className="w-full sm:w-auto bg-brand-600 text-white px-8 py-3 rounded-2xl font-bold text-sm hover:bg-brand-700 disabled:bg-slate-200 disabled:text-slate-400 transition-all shadow-lg shadow-brand-200 active:scale-95 flex items-center justify-center gap-2"
+                className="btn-premium w-full sm:w-auto px-8 py-3.5 text-sm md:ml-auto disabled:opacity-50 disabled:grayscale disabled:pointer-events-none"
               >
                 {t.book_now}
               </button>
@@ -165,7 +186,7 @@ export const TripCard: React.FC<TripCardProps> = ({
             {isPassenger && !isDriver && (
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCancelParticipation?.(trip.id); }}
-                className="w-full sm:w-auto bg-white text-rose-600 border border-rose-100 px-6 py-3 rounded-2xl font-bold text-sm hover:bg-rose-50 transition-all active:scale-95"
+                className="w-full sm:w-auto bg-white dark:bg-transparent text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 px-6 py-3.5 rounded-xl font-bold text-sm hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all active:scale-95 md:ml-auto"
               >
                 {t.cancel_unexpected}
               </button>
@@ -174,7 +195,7 @@ export const TripCard: React.FC<TripCardProps> = ({
             {isDriver && (
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCancelTrip?.(trip.id); }}
-                className="w-full sm:w-auto bg-rose-500 text-white px-8 py-3 rounded-2xl font-bold text-sm hover:bg-rose-600 transition-all shadow-lg shadow-rose-100 active:scale-95"
+                className="w-full sm:w-auto bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 px-8 py-3.5 rounded-xl font-bold text-sm hover:bg-rose-500 hover:text-white transition-all active:scale-95 md:ml-auto"
               >
                 {t.cancel_commitment}
               </button>
@@ -183,14 +204,16 @@ export const TripCard: React.FC<TripCardProps> = ({
         </div>
       </div>
 
-      {/* Passenger List: visible to driver or passengers */}
+      {/* Passenger List */}
       {(isDriver || isPassenger) && trip.passengerIds && trip.passengerIds.length > 0 && (
         <PassengerList passengerIds={trip.passengerIds} />
       )}
 
       {
         (isDriver || isPassenger) && (
-          <TripChat tripId={trip.id} currentUser={currentUser} />
+          <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <TripChat tripId={trip.id} currentUser={currentUser} />
+          </div>
         )
       }
     </article>

@@ -282,7 +282,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalO
   };
 
   return (
-    <main className="max-w-4xl mx-auto p-4 md:p-8 pb-32 space-y-10 relative dark:text-white">
+    <main className="max-w-7xl mx-auto p-4 md:p-6 space-y-8 animate-fade-in relative z-10">
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
       <OfferRideModal
         isOpen={isOfferModalOpen}
@@ -293,151 +293,169 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalO
       />
 
       {/* Toast Notifications */}
-      <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] w-full max-w-sm px-4">
+      <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] w-full max-w-sm px-4">
         {bookingMessage && (
-          <div className={`px-6 py-4 rounded-3xl shadow-2xl font-bold text-white transition-all transform animate-in slide-in-from-top duration-300 flex items-center gap-3 ${bookingMessage.type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'
+          <div className={`glass-panel px-6 py-4 rounded-2xl shadow-2xl font-bold text-white transition-all transform animate-in slide-in-from-top duration-300 flex items-center gap-3 backdrop-blur-xl border border-white/20 ${bookingMessage.type === 'success' ? 'bg-emerald-500/80' : 'bg-rose-500/80'
             }`}>
             <span className="text-xl">{bookingMessage.type === 'success' ? '✅' : '⚠️'}</span>
-            <p className="text-sm">{bookingMessage.text}</p>
+            <p className="text-sm drop-shadow-md">{bookingMessage.text}</p>
           </div>
         )}
       </div>
 
-      {/* Hero Profile Header */}
-      <header className="glass-header rounded-[2.5rem] p-10 text-white shadow-2xl group relative z-50">
+      {/* Hero Header - Glass Card */}
+      <header className="glass-panel rounded-3xl p-8 md:p-10 text-slate-800 dark:text-white shadow-xl relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-500/10 to-accent-neon/10 dark:from-brand-500/20 dark:to-accent-neon/20 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
         <div className="flex flex-col md:flex-row justify-between items-center gap-8 relative z-10">
-          <div className="space-y-2 text-center md:text-left">
-            <h1 className="text-4xl font-extrabold tracking-tight">{t.eco_profile}</h1>
-            <p className="text-brand-100 font-medium">{t.welcome_user.replace('{name}', currentUser.name)}</p>
-            <div className="pt-4 flex justify-center md:justify-start gap-3">
+          <div className="text-center md:text-left space-y-2">
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-accent-neon dark:from-brand-300 dark:to-brand-100">
+              {t.eco_profile}
+            </h1>
+            <p className="text-slate-500 dark:text-slate-300 font-medium text-lg">
+              {t.welcome_user.replace('{name}', currentUser.name)}
+            </p>
+            <div className="pt-4 flex justify-center md:justify-start gap-4">
               <button
                 onClick={() => setIsHelpOpen(true)}
-                className="bg-white/10 hover:bg-white/20 backdrop-blur-md px-5 py-2 rounded-2xl text-xs font-bold border border-white/20 transition-all flex items-center gap-2"
+                className="px-5 py-2.5 rounded-xl text-sm font-bold bg-white/50 dark:bg-white/10 hover:bg-white/80 dark:hover:bg-white/20 transition-all border border-slate-200 dark:border-white/10 flex items-center gap-2"
               >
-                {t.how_it_works}
+                <span>💡</span> {t.how_it_works}
               </button>
               {lastSync && (
-                <span className="text-[9px] font-black uppercase tracking-widest text-white/50 self-center">
-                  {t.last_save.replace('{time}', lastSync.toLocaleTimeString())}
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 self-center bg-slate-100 dark:bg-slate-800/50 px-3 py-1 rounded-full">
+                  {t.last_save.replace('{time}', lastSync.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))}
                 </span>
               )}
             </div>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-6 items-center">
             {/* Notification Bell */}
             <div className="relative group/notif z-50">
-              <button className="bg-white/10 w-12 h-12 rounded-2xl flex items-center justify-center text-xl relative backdrop-blur-md border border-white/10 hover:bg-white/20 transition-all">
+              <button className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl bg-white dark:bg-slate-800 shadow-lg border border-slate-100 dark:border-slate-700 hover:scale-105 transition-transform">
                 🔔
                 <AsyncNotificationBadge userId={currentUser.id} />
               </button>
 
               {/* Dropdown */}
-              <div className="absolute top-full right-0 mt-4 w-80 bg-white rounded-3xl p-2 shadow-2xl opacity-0 invisible group-hover/notif:opacity-100 group-hover/notif:visible transition-all duration-200 z-[100] origin-top-right transform scale-95 group-hover/notif:scale-100 ring-1 ring-black/5">
+              <div className="absolute top-full right-0 mt-4 w-80 glass-panel bg-white/90 dark:bg-slate-900/90 rounded-3xl p-2 shadow-2xl opacity-0 invisible group-hover/notif:opacity-100 group-hover/notif:visible transition-all duration-200 z-[100] origin-top-right transform scale-95 group-hover/notif:scale-100">
                 <AsyncNotificationList userId={currentUser.id} />
               </div>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-2xl rounded-3xl p-8 text-center min-w-[240px] border border-white/10 shadow-inner group-hover:bg-white/20 transition-all hidden md:block">
+            {/* Credits Card */}
+            <div className="hidden md:block glass-card p-6 min-w-[200px] text-center bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-lg shadow-brand-500/20 border-none">
               <span
                 key={currentUser.credits}
-                className="block text-6xl font-black mb-1 drop-shadow-lg animate-in zoom-in-95 duration-300"
+                className="block text-5xl font-black mb-1 drop-shadow-md animate-in zoom-in-95 duration-300"
               >
                 {currentUser.credits}
               </span>
-              <span className="uppercase text-[11px] font-black tracking-[0.2em] opacity-80">{t.eco_credits}</span>
+              <span className="uppercase text-[10px] font-bold tracking-[0.2em] opacity-90">{t.eco_credits}</span>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Main Controls & Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column: Promos, Actions, Trips */}
-        <div className="lg:col-span-8 space-y-8">
-          <div className="flex flex-col sm:flex-row bg-white p-1.5 rounded-3xl shadow-sm border border-slate-100">
+      {/* Bento Grid Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+        {/* Left Column: Stats & Actions (Mobile only mostly) or Secondary Nav */}
+        <div className="lg:col-span-8 space-y-6">
+
+          {/* Navigation Tabs */}
+          <div className="glass-panel p-2 rounded-2xl flex flex-col sm:flex-row gap-2">
             <button
               onClick={() => setActiveTab('all')}
-              className={`flex-1 py-4 rounded-2xl text-sm font-bold transition-all ${activeTab === 'all' ? 'bg-brand-600 text-white shadow-lg shadow-brand-100' : 'text-slate-500 hover:text-brand-600'}`}
+              className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'all'
+                ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/30'
+                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
             >
               {t.explore_offers}
             </button>
             <button
               onClick={() => setActiveTab('mine')}
-              className={`flex-1 py-4 rounded-2xl text-sm font-bold transition-all ${activeTab === 'mine' ? 'bg-brand-600 text-white shadow-lg shadow-brand-100' : 'text-slate-500 hover:text-brand-600'}`}
+              className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'mine'
+                ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/30'
+                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
             >
               {t.my_commitments}
             </button>
+            <button
+              onClick={() => setActiveTab('trains')}
+              className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 ${activeTab === 'trains'
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
+                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+            >
+              <span>🚆</span> {t.train_study}
+            </button>
           </div>
 
-          <button
-            onClick={() => setActiveTab('trains')}
-            className={`w-full py-4 rounded-2xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${activeTab === 'trains' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-white text-indigo-900 border border-indigo-100 hover:bg-indigo-50'}`}
-          >
-            {t.train_study}
-          </button>
-
-          <div className="flex justify-end">
-            <div className="bg-slate-100 p-1 rounded-2xl flex gap-1">
-              <button
-                onClick={() => setViewMode('list')}
-                className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${viewMode === 'list' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400'}`}
-              >
-                {t.list_view}
-              </button>
-              <button
-                onClick={() => setViewMode('map')}
-                className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${viewMode === 'map' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400'}`}
-              >
-                {t.map_view}
-              </button>
-            </div>
-          </div>
-
-          <section className="bg-white p-8 rounded-4xl border border-slate-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="flex items-center gap-6">
-              <div className="w-16 h-16 bg-brand-50 rounded-3xl flex items-center justify-center text-3xl shadow-inner">🚗</div>
+          {/* Action Banner */}
+          <section className="glass-panel p-8 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-accent-gold/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+            <div className="flex items-center gap-6 relative z-10">
+              <div className="w-16 h-16 bg-gradient-to-br from-brand-100 to-white dark:from-slate-700 dark:to-slate-600 rounded-2xl flex items-center justify-center text-3xl shadow-inner ring-1 ring-black/5">🚗</div>
               <div>
-                <h2 className="text-xl font-extrabold text-slate-800">{t.create_impact_title}</h2>
-                <p className="text-slate-400 text-sm font-medium">{t.create_impact_desc}</p>
+                <h2 className="text-xl font-bold text-slate-800 dark:text-white">{t.create_impact_title}</h2>
+                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium leading-relaxed max-w-md">{t.create_impact_desc}</p>
               </div>
             </div>
             <button
               onClick={() => setIsOfferModalOpen(true)}
-              className="w-full md:w-auto bg-slate-900 text-white px-10 py-5 rounded-2xl font-black hover:bg-slate-800 transition-all shadow-xl active:scale-95"
+              className="btn-premium px-8 py-4 w-full md:w-auto text-sm"
             >
               {t.propose_trip_btn}
             </button>
           </section>
 
-          {/* Filters & Results */}
-          <section className="space-y-8">
+          {/* Filters & Content Area */}
+          <div className="space-y-6">
             {activeTab === 'all' && (
-              <div className="flex flex-col md:flex-row gap-4 items-center">
-                <div className="relative flex-1 group w-full">
-                  <span className="absolute left-6 top-1/2 -translate-y-1/2 text-xl opacity-40">🔍</span>
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1 group">
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-lg opacity-40">🔍</span>
                   <input
                     type="text"
                     placeholder={t.search_placeholder}
-                    className="w-full pl-16 pr-6 py-5 bg-white border border-slate-200 rounded-3xl text-sm font-semibold focus:border-brand-500 focus:ring-0 outline-none transition-all shadow-sm"
+                    className="w-full pl-14 pr-6 py-4 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500/50 outline-none transition-all shadow-sm"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                <SubjectDropdown
-                  subjects={availableSubjects}
-                  selectedSubject={subjectFilter}
-                  onSelect={setSubjectFilter}
-                />
+                <div className="w-full md:w-auto">
+                  <SubjectDropdown
+                    subjects={availableSubjects}
+                    selectedSubject={subjectFilter}
+                    onSelect={setSubjectFilter}
+                  />
+                </div>
                 <button
                   onClick={() => setAccessibilityOnly(!accessibilityOnly)}
-                  className={`h-[62px] px-8 rounded-3xl text-sm font-black transition-all border flex items-center gap-3 whitespace-nowrap ${accessibilityOnly
-                    ? 'bg-orange-600 border-orange-600 text-white shadow-lg shadow-orange-100'
-                    : 'bg-white border-slate-200 text-slate-600 hover:border-orange-200'
+                  className={`px-6 py-4 rounded-2xl text-sm font-bold transition-all border flex items-center justify-center gap-2 whitespace-nowrap ${accessibilityOnly
+                    ? 'bg-orange-500/10 border-orange-500 text-orange-600 dark:text-orange-400'
+                    : 'bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-orange-300'
                     }`}
                 >
-                  {t.support_m5}
+                  <span className="text-lg">♿</span>
+                  <span className="hidden md:inline">{t.support_m5}</span>
                 </button>
+                <div className="bg-slate-100 dark:bg-slate-800/50 p-1 rounded-2xl flex gap-1 border border-slate-200 dark:border-slate-700">
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`px-4 py-2 rounded-xl text-lg transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 shadow-sm text-brand-600' : 'text-slate-400 hover:text-slate-600'}`}
+                    title={t.list_view}
+                  >
+                    📝
+                  </button>
+                  <button
+                    onClick={() => setViewMode('map')}
+                    className={`px-4 py-2 rounded-xl text-lg transition-all ${viewMode === 'map' ? 'bg-white dark:bg-slate-700 shadow-sm text-brand-600' : 'text-slate-400 hover:text-slate-600'}`}
+                    title={t.map_view}
+                  >
+                    🗺️
+                  </button>
+                </div>
               </div>
             )}
 
@@ -445,72 +463,80 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalO
               <TrainStudySection currentUser={currentUser} />
             )}
 
-            <div className="flex justify-between items-center px-2">
-              <h2 
-                className="text-2xl font-black tracking-tight"
-                style={{ color: theme === 'dark' ? '#f8fafc' : '#1e293b' }}
-              >
-                {activeTab === 'all' ? t.match_available : t.your_trips}
-                <span className="ml-3 bg-slate-200 text-slate-600 text-xs px-3 py-1 rounded-full">{filteredTrips.length}</span>
-              </h2>
-              <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full uppercase tracking-widest border border-emerald-100">
-                {t.mamadb_protected}
-              </span>
-            </div>
+            {activeTab !== 'trains' && (
+              <div className="flex justify-between items-center px-2">
+                <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white flex items-center gap-3">
+                  {activeTab === 'all' ? t.match_available : t.your_trips}
+                  <span className="bg-brand-100 dark:bg-brand-900/50 text-brand-600 dark:text-brand-400 text-xs px-2.5 py-1 rounded-full font-bold">{filteredTrips.length}</span>
+                </h2>
+                <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1 rounded-full uppercase tracking-widest border border-emerald-100 dark:border-emerald-800/50">
+                  {t.mamadb_protected}
+                </span>
+              </div>
+            )}
 
             {viewMode === 'map' && activeTab !== 'trains' ? (
-              <MapView
-                trips={activeTab === 'all'
-                  ? trips.filter(t => t.seatsAvailable > 0)
-                  : trips.filter(t => t.driverId === currentUser.id || (t.passengerIds && t.passengerIds.includes(currentUser.id)))}
-                studyGroups={activeTab === 'all' ? studyGroups : studyGroups.filter(g => g.creatorId === currentUser.id || g.members.includes(currentUser.id))}
-                onTripSelect={() => { }}
-                userLocation={userLocation}
-              />
+              <div className="rounded-3xl overflow-hidden glass-panel border-4 border-white dark:border-slate-700 shadow-2xl h-[500px]">
+                <MapView
+                  trips={activeTab === 'all'
+                    ? trips.filter(t => t.seatsAvailable > 0)
+                    : trips.filter(t => t.driverId === currentUser.id || (t.passengerIds && t.passengerIds.includes(currentUser.id)))}
+                  studyGroups={activeTab === 'all' ? studyGroups : studyGroups.filter(g => g.creatorId === currentUser.id || g.members.includes(currentUser.id))}
+                  onTripSelect={() => { }}
+                  userLocation={userLocation}
+                />
+              </div>
             ) : filteredTrips.length > 0 || (activeTab === 'trains') ? (
-              <div className="grid grid-cols-1 gap-6">
+              <div className="grid grid-cols-1 gap-4">
                 {filteredTrips.map((trip) => (
-                  <TripCard
-                    key={trip.id}
-                    trip={trip}
-                    currentUser={currentUser}
-                    onQuickBook={handleQuickBook}
-                    onCancelParticipation={handleCancelParticipation}
-                    onCancelTrip={handleCancelTrip}
-                  />
+                  <div key={trip.id} className="transform transition-all hover:scale-[1.01]">
+                    <TripCard
+                      trip={trip}
+                      currentUser={currentUser}
+                      onQuickBook={handleQuickBook}
+                      onCancelParticipation={handleCancelParticipation}
+                      onCancelTrip={handleCancelTrip}
+                    // Pass styling prop if TripCard supports it, or rely on global CSS override 
+                    // Actually TripCard needs to be updated too for full glassmorphism, 
+                    // but wrapping it here might be enough for layout.
+                    />
+                  </div>
                 ))}
               </div>
-            ) : (
-              <div className="text-center py-24 bg-white rounded-[3rem] border border-slate-100 shadow-sm">
-                <div className="text-7xl mb-6 grayscale opacity-20">📭</div>
+            ) : activeTab !== 'trains' && (
+              <div className="text-center py-24 glass-panel rounded-[3rem]">
+                <div className="text-6xl mb-6 grayscale opacity-20">📭</div>
                 <p className="text-slate-400 font-bold text-lg">{t.no_trips_found}</p>
                 <button
                   onClick={() => { setActiveTab('all'); setSearchQuery(''); setSubjectFilter('all'); }}
-                  className="mt-6 text-brand-600 font-black text-sm hover:underline"
+                  className="mt-6 text-brand-600 dark:text-brand-400 font-black text-sm hover:underline"
                 >
                   {t.reset_filters}
                 </button>
               </div>
             )}
-          </section>
+          </div>
         </div>
 
-        {/* Right Sidebar: Leaderboard & Stats */}
-        <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-32">
+        {/* Right Sidebar */}
+        <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-32 h-fit">
           <Leaderboard currentUserId={currentUser.id} />
 
-          {/* Small promo card */}
-          <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl transform translate-x-1/2 -translate-y-1/2"></div>
-            <h4 className="text-xl font-black mb-2 relative z-10">{t.pnrr_missions_title}</h4>
-            <p className="text-indigo-100 text-xs font-medium relative z-10 leading-relaxed mb-4">
+          {/* Promo Card */}
+          <div className="glass-card p-8 bg-gradient-to-br from-indigo-600 to-violet-700 text-white relative overflow-hidden group hover:shadow-neon transition-all duration-500">
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-3xl group-hover:bg-white/30 transition-all"></div>
+            <div className="absolute bottom-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+
+            <h4 className="text-2xl font-black mb-3 relative z-10">{t.pnrr_missions_title}</h4>
+            <p className="text-indigo-100 text-sm font-medium relative z-10 leading-relaxed mb-6">
               {t.pnrr_missions_desc}
             </p>
-            <button onClick={() => setIsHelpOpen(true)} className="bg-white text-indigo-900 px-4 py-2 rounded-xl text-xs font-black relative z-10">
-              {t.learn_more}
+            <button onClick={() => setIsHelpOpen(true)} className="bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/20 text-white px-5 py-2.5 rounded-xl text-xs font-bold relative z-10 transition-all">
+              {t.learn_more} →
             </button>
           </div>
         </div>
+
       </div>
     </main>
   );

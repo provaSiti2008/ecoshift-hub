@@ -225,8 +225,8 @@ const App: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-900 transition-colors duration-300">
-        <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
+        <div className="w-16 h-16 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -236,92 +236,90 @@ const App: React.FC = () => {
   }
 
   return (
-    <div 
-      className="min-h-screen flex flex-col transition-colors duration-300"
-      style={{
-        backgroundColor: theme === 'dark' ? '#0f172a' : '#ffffff',
-        color: theme === 'dark' ? '#f8fafc' : '#000000'
-      }}
-    >
-      <nav 
-        className="border-b sticky top-0 z-[100] px-4 py-3 transition-colors duration-300"
-        style={{
-          backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
-          borderColor: theme === 'dark' ? '#334155' : '#e2e8f0'
-        }}
-      >
-        <div className="max-w-4xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-black text-xl">E</span>
+    <div className="relative min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-500 overflow-hidden font-sans selection:bg-brand-500/30">
+      {/* Ambient Background Elements */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-brand-400/20 rounded-full blur-[128px] animate-float opacity-70" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-accent-neon/10 rounded-full blur-[128px] animate-pulse-slow opacity-60" />
+        <div className="absolute top-[40%] left-[40%] w-[300px] h-[300px] bg-accent-gold/5 rounded-full blur-[96px] animate-float opacity-40 delay-1000" />
+      </div>
+
+      {/* Floating Navigation (Dock Style) */}
+      <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 animate-fade-in-up">
+        <nav className="glass-panel w-full max-w-5xl rounded-full px-6 py-3 flex items-center justify-between shadow-2xl ring-1 ring-white/20 dark:ring-white/5">
+          {/* Logo Section */}
+          <div className="flex items-center gap-3">
+            <div className="relative group">
+              <div className="absolute inset-0 bg-brand-500 blur-lg opacity-50 group-hover:opacity-75 transition-opacity rounded-full"></div>
+              <div className="relative w-10 h-10 bg-gradient-to-br from-brand-500 to-brand-700 rounded-xl flex items-center justify-center shadow-lg transform group-hover:scale-105 transition-transform">
+                <span className="text-white font-black text-xl">E</span>
+              </div>
             </div>
-            <span 
-              className="font-bold text-xl tracking-tight"
-              style={{ color: theme === 'dark' ? '#f8fafc' : '#1e293b' }}
-            >
+            <span className="font-bold text-lg tracking-tight text-slate-800 dark:text-white hidden sm:block">
               {t.app_name}
             </span>
           </div>
-          <div className="flex items-center gap-4">
+
+          {/* Center Actions */}
+          <div className="flex items-center gap-3 md:gap-4">
             <LanguageSelector />
+
+            {/* Theme Toggle */}
             <button
-              onClick={() => {
-                console.log('Pulsante tema cliccato!');
-                toggleTheme();
-              }}
-              className="text-[10px] font-bold text-slate-400 hover:text-brand-600 transition-colors flex items-center gap-1 px-3 py-1 rounded-lg border border-slate-300 hover:border-brand-300"
-              title={theme === 'light' ? 'Attiva modalità scura' : 'Attiva modalità chiara'}
+              onClick={toggleTheme}
+              className="relative w-14 h-8 bg-slate-200 dark:bg-slate-700 rounded-full p-1 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+              aria-label="Toggle Theme"
             >
-              <span className="text-lg">{theme === 'light' ? '🌙' : '☀️'}</span>
-              <span className="hidden sm:inline">{theme === 'light' ? 'Scuro' : 'Chiaro'}</span>
-            </button>
-            {userLocation ? (
-              <div className="flex items-center gap-1 text-emerald-600" title="Posizione attiva">
-                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                <span className="text-[10px] font-bold hidden sm:inline">GPS</span>
+              <div className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 flex items-center justify-center text-xs ${theme === 'dark' ? 'translate-x-6' : 'translate-x-0'}`}>
+                {theme === 'dark' ? '🌙' : '☀️'}
               </div>
-            ) : locationPermission === 'denied' ? (
-              <button
-                onClick={requestUserLocation}
-                className="text-[10px] font-bold text-slate-400 dark:text-slate-300 hover:text-emerald-600 transition-colors flex items-center gap-1"
-                title="Attiva posizione"
-              >
-                <span>📍</span>
-                <span className="hidden sm:inline">Attiva GPS</span>
-              </button>
+            </button>
+
+            {/* GPS Status */}
+            {userLocation ? (
+              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-600 dark:text-emerald-400 group cursor-help">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="text-[10px] font-bold">GPS ON</span>
+              </div>
             ) : (
               <button
                 onClick={requestUserLocation}
-                className="text-[10px] font-bold text-slate-400 dark:text-slate-300 hover:text-emerald-600 transition-colors flex items-center gap-1"
-                title="Attiva posizione"
+                className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors text-slate-500 dark:text-slate-400 text-[10px] font-bold"
               >
-                <span>📍</span>
-                <span className="hidden sm:inline">Attiva GPS</span>
+                <span className="text-sm">📍</span>
+                <span>{t.enable_gps || 'Enable GPS'}</span>
               </button>
             )}
+          </div>
+
+          {/* User Profile */}
+          <div className="flex items-center gap-4">
             <button
               onClick={handleLogout}
-              className="text-[10px] font-black text-slate-400 dark:text-slate-300 hover:text-rose-600 transition-colors uppercase tracking-widest mr-2"
-              aria-label={t.logout}
+              className="hidden md:block text-xs font-bold text-slate-400 hover:text-rose-500 transition-colors uppercase tracking-wider"
             >
               {t.logout}
             </button>
             <button
               onClick={() => setIsProfileModalOpen(true)}
-              className="focus-ring rounded-full overflow-hidden transition-transform active:scale-90"
-              aria-label={t.open_profile}
+              className="relative group focus:outline-none"
             >
+              <div className="absolute inset-0 bg-gradient-to-tr from-brand-400 to-accent-neon rounded-full blur opacity-0 group-hover:opacity-75 transition-opacity"></div>
               <img
-                src={`https://picsum.photos/seed/${currentUser.id}/32/32`}
-                alt={t.my_profile}
-                className="w-8 h-8 rounded-full border border-slate-300 object-cover"
+                src={`https://picsum.photos/seed/${currentUser.id}/40/40`}
+                alt={t.profile}
+                className="relative w-10 h-10 rounded-full border-2 border-white dark:border-slate-800 object-cover shadow-sm group-hover:scale-105 transition-transform"
               />
             </button>
           </div>
-        </div>
-      </nav>
+        </nav>
+      </div>
 
-      <div className="flex-1 overflow-y-auto">
+      {/* Main Content Area */}
+      <div className="relative z-10 pt-28 pb-32 h-screen overflow-y-auto no-scrollbar scroll-smooth">
         <Dashboard
           currentUser={currentUser}
           isOfferModalOpen={isOfferModalOpen}
@@ -331,43 +329,45 @@ const App: React.FC = () => {
         />
       </div>
 
+      {/* Mobile Bottom Navigation (Glass) */}
+      <div className="md:hidden fixed bottom-6 left-4 right-4 z-50 animate-fade-in-up delay-200">
+        <nav className="glass-panel rounded-2xl p-2 flex justify-around items-center shadow-2xl ring-1 ring-white/20 dark:ring-white/5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl">
+          <button
+            className="flex flex-col items-center gap-1 p-2 rounded-xl text-brand-600 dark:text-brand-400 active:scale-95 transition-transform"
+            onClick={() => handleNavigate('')}
+          >
+            <span className="text-2xl drop-shadow-sm">🏠</span>
+            <span className="text-[10px] font-bold">{t.home}</span>
+            <div className="w-1 h-1 bg-brand-500 rounded-full mt-1"></div>
+          </button>
+
+          <button
+            onClick={() => setIsOfferModalOpen(true)}
+            className="flex flex-col items-center justify-center -mt-8"
+          >
+            <div className="w-14 h-14 bg-gradient-to-br from-brand-500 to-accent-neon rounded-full flex items-center justify-center shadow-lg shadow-brand-500/30 text-white transform active:scale-90 transition-transform border-4 border-slate-50 dark:border-slate-900">
+              <span className="text-2xl font-bold">+</span>
+            </div>
+            <span className="text-[10px] font-bold mt-2 text-slate-600 dark:text-slate-300">{t.create}</span>
+          </button>
+
+          <button
+            onClick={() => setIsProfileModalOpen(true)}
+            className="flex flex-col items-center gap-1 p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 active:scale-95 transition-transform"
+          >
+            <span className="text-2xl">👤</span>
+            <span className="text-[10px] font-bold">{t.profile}</span>
+          </button>
+        </nav>
+      </div>
+
+      {/* Modals */}
       <ProfileModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
         user={currentUser}
         onUpdate={handleUserUpdate}
       />
-
-      <footer 
-        className="border-t md:hidden sticky bottom-0 z-50 transition-colors duration-300"
-        style={{
-          backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
-          borderColor: theme === 'dark' ? '#334155' : '#e2e8f0'
-        }}
-      >
-        <div className="flex justify-around p-3">
-          <button className="flex flex-col items-center text-brand-600" aria-label={t.home}>
-            <span className="text-xl">🏠</span>
-            <span className="text-[10px] font-bold">{t.home}</span>
-          </button>
-          <button
-            onClick={() => setIsOfferModalOpen(true)}
-            className="flex flex-col items-center text-brand-600 font-bold"
-            aria-label={t.create_trip_aria}
-          >
-            <span className="text-2xl bg-brand-50 dark:bg-brand-900 p-2 rounded-full mb-1">➕</span>
-            <span className="text-[10px]">{t.create}</span>
-          </button>
-          <button
-            onClick={() => setIsProfileModalOpen(true)}
-            className="flex flex-col items-center text-slate-400 dark:text-slate-300"
-            aria-label={t.profile}
-          >
-            <span className="text-xl">👤</span>
-            <span className="text-[10px] font-bold">{t.profile}</span>
-          </button>
-        </div>
-      </footer>
     </div>
   );
 };

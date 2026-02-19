@@ -115,113 +115,148 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen glass-header flex items-center justify-center p-6">
-      <div className="w-full max-w-md bg-white/95 backdrop-blur-xl rounded-[3rem] shadow-2xl overflow-hidden border border-white/20">
-        <div className="p-10">
-          <div className="flex flex-col items-center mb-10">
-            <div className="w-16 h-16 bg-brand-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-brand-200">
+    <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden bg-slate-50 dark:bg-slate-900 transition-colors duration-500">
+      {/* Dynamic Background */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-brand-500/20 rounded-full blur-[100px] animate-float opacity-60"></div>
+        <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-accent-neon/20 rounded-full blur-[100px] animate-pulse-slow opacity-60"></div>
+        <div className="absolute top-[30%] left-[40%] w-[300px] h-[300px] bg-accent-gold/10 rounded-full blur-[80px] animate-float opacity-40 delay-1000"></div>
+      </div>
+
+      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/20 relative z-10 animate-fade-in-up">
+
+        {/* Left Col: Visuals (Hidden on mobile sometimes, but let's keep it for premium feel) */}
+        <div className="relative overflow-hidden p-10 flex flex-col justify-between bg-gradient-to-br from-brand-600 to-brand-800 text-white">
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+
+          <div className="relative z-10">
+            <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-6 border border-white/20 shadow-lg">
               <span className="text-white font-black text-3xl italic">E</span>
             </div>
-            <h1 className="text-3xl font-black text-slate-800 tracking-tight">{t.app_name}</h1>
-            <p className="text-slate-400 text-sm font-medium mt-2">{t.auth_subtitle}</p>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-4 leading-tight">
+              {t.app_name}
+            </h1>
+            <p className="text-brand-100 font-medium text-lg max-w-xs leading-relaxed">
+              {t.auth_subtitle}
+            </p>
           </div>
 
-          <div className="flex bg-slate-100 p-1 rounded-2xl mb-8">
-            <button
-              onClick={() => { setView('login'); clearState(); }}
-              className={`flex-1 py-3 rounded-xl text-xs font-black transition-all ${view === 'login' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-400'}`}
-            >
-              {t.login_tab}
-            </button>
-            <button
-              onClick={() => { setView('register'); clearState(); }}
-              className={`flex-1 py-3 rounded-xl text-xs font-black transition-all ${view === 'register' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-400'}`}
-            >
-              {t.register_tab}
-            </button>
+          <div className="relative z-10 mt-12">
+            <div className="bg-white/10 backdrop-blur-md p-6 rounded-3xl border border-white/10">
+              <p className="text-xs font-bold uppercase tracking-widest opacity-70 mb-2">{t.auth_pnrr_contribution}</p>
+              <p className="text-xl font-bold">{t.auth_pnrr_missions}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Col: Form */}
+        <div className="p-8 md:p-12 flex flex-col justify-center bg-white/50 dark:bg-transparent">
+          <div className="mb-8">
+            <div className="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl">
+              <button
+                onClick={() => { setView('login'); clearState(); }}
+                className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${view === 'login'
+                  ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+              >
+                {t.login_tab}
+              </button>
+              <button
+                onClick={() => { setView('register'); clearState(); }}
+                className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${view === 'register'
+                  ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+              >
+                {t.register_tab}
+              </button>
+            </div>
           </div>
 
           {error && (
-            <div className="bg-rose-50 text-rose-600 p-4 rounded-2xl text-xs font-bold mb-6 border border-rose-100 flex flex-col gap-2 animate-pulse">
-              <div className="flex items-center gap-2">
-                <span>⚠️</span> {error}
-              </div>
+            <div className="bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 p-4 rounded-2xl text-xs font-bold mb-6 border border-rose-100 dark:border-rose-900/30 flex items-center gap-3 animate-pulse">
+              <span className="text-lg">⚠️</span>
+              {error}
             </div>
           )}
 
           {successMsg && (
-            <div className="bg-green-50 text-green-600 p-4 rounded-2xl text-xs font-bold mb-6 border border-green-100 flex items-center gap-2">
-              <span>✓</span> {successMsg}
+            <div className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 p-4 rounded-2xl text-xs font-bold mb-6 border border-emerald-100 dark:border-emerald-900/30 flex items-center gap-3">
+              <span className="text-lg">✓</span>
+              {successMsg}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {view === 'register' && (
-              <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{t.full_name}</label>
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">{t.full_name}</label>
                 <input
                   required
                   type="text"
                   placeholder="Mario Rossi"
-                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:border-brand-500 outline-none transition-all"
+                  className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
                   value={name}
                   onChange={e => setName(e.target.value)}
                 />
               </div>
             )}
 
-            <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{t.uni_email}</label>
+            <div className="space-y-1.5">
+              <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">{t.uni_email}</label>
               <input
                 required
                 type="email"
                 placeholder="nome.cognome@polimi.it"
-                className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:border-brand-500 outline-none transition-all"
+                className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
               />
             </div>
 
-            <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{t.password}</label>
+            <div className="space-y-1.5">
+              <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">{t.password}</label>
               <input
                 required
                 type="password"
                 placeholder="••••••••"
-                className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:border-brand-500 outline-none transition-all"
+                className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
               />
             </div>
 
             {view === 'register' && (
-              <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{t.default_role}</label>
-                <select
-                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:border-brand-500 outline-none transition-all"
-                  value={role}
-                  onChange={e => setRole(e.target.value as UserRole)}
-                >
-                  <option value={UserRole.BOTH}>{t.role_both}</option>
-                  <option value={UserRole.DRIVER}>{t.role_driver}</option>
-                  <option value={UserRole.PASSENGER}>{t.role_passenger}</option>
-                </select>
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">{t.default_role}</label>
+                <div className="relative">
+                  <select
+                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-semibold text-slate-800 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all appearance-none cursor-pointer"
+                    value={role}
+                    onChange={e => setRole(e.target.value as UserRole)}
+                  >
+                    <option value={UserRole.BOTH}>{t.role_both}</option>
+                    <option value={UserRole.DRIVER}>{t.role_driver}</option>
+                    <option value={UserRole.PASSENGER}>{t.role_passenger}</option>
+                  </select>
+                  <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
+                </div>
               </div>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-slate-900 text-white py-5 rounded-3xl font-black text-sm tracking-widest hover:bg-slate-800 shadow-xl transition-all active:scale-95 mt-4 disabled:opacity-50"
+              className="btn-premium w-full py-5 mt-6 text-sm tracking-widest uppercase shadow-xl hover:shadow-2xl disabled:opacity-70 disabled:grayscale"
             >
-              {loading ? t.loading : (view === 'login' ? t.login_action : t.register_action)}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  {t.loading}
+                </span>
+              ) : (view === 'login' ? t.login_action : t.register_action)}
             </button>
           </form>
-
-          <p className="text-center text-[10px] text-slate-400 font-bold mt-8 uppercase tracking-widest leading-relaxed">
-            {t.auth_pnrr_contribution} <br />
-            <span className="text-brand-600">{t.auth_pnrr_missions}</span>
-          </p>
         </div>
       </div>
     </div>
