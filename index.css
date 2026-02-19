@@ -126,3 +126,9 @@ select option {
   background-color: var(--bg-secondary) !important;
   color: var(--text-main) !important;
 }
+
+/* Toast Notifications - Always on top */
+.toast-notification {
+  position: fixed !important;
+  z-index: 9999 !important;
+}
