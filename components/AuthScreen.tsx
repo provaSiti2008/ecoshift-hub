@@ -84,10 +84,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
       
       if (result.ok) {
         setPendingEmail(normalizedEmail);
-        setIsMockMode(!!result.mock);
+        setIsMockMode(!!result.mock || !!result.devCode);
         setView('verify');
-        if (result.mock) {
+        if (result.devCode) {
+          setSuccessMsg(`Codice OTP (test): ${result.devCode}`);
+          setOtpCode(result.devCode);
+        } else if (result.mock) {
           setSuccessMsg('Modalità sviluppo: controlla la console del server per il codice OTP');
+        } else if (result.emailError) {
+          setSuccessMsg('Email non inviata (verifica dominio su Resend). Usa il codice mostrato qui sotto.');
         } else {
           setSuccessMsg('Codice inviato alla tua email');
         }

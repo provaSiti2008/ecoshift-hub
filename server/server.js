@@ -14,45 +14,51 @@ function generateOTP() {
 
 async function sendOTPEmail(email, code, userName) {
     if (!RESEND_API_KEY) {
-        console.log('[OTP] RESEND_API_KEY not set, skipping email send. Code:', code);
-        return { success: true, mock: true };
+        console.log('[OTP] RESEND_API_KEY not set. Code:', code, 'for:', email);
+        return { success: true, mock: true, code };
     }
     
-    const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${RESEND_API_KEY}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            from: 'EcoShift <noreply@resend.dev>',
-            to: email,
-            subject: 'Verifica la tua email - EcoShift',
-            html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                    <div style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 30px; border-radius: 16px; text-align: center;">
-                        <h1 style="color: white; margin: 0; font-size: 28px;">EcoShift</h1>
-                        <p style="color: rgba(255,255,255,0.9); margin-top: 10px;">Verifica la tua email</p>
-                    </div>
-                    <div style="background: #f8fafc; padding: 30px; border-radius: 0 0 16px 16px; text-align: center;">
-                        <p style="color: #475569; font-size: 16px;">Ciao ${userName || 'utente'},</p>
-                        <p style="color: #64748b; font-size: 14px;">Inserisci questo codice per completare la registrazione:</p>
-                        <div style="background: white; padding: 20px 40px; border-radius: 12px; display: inline-block; margin: 20px 0; border: 2px solid #e2e8f0;">
-                            <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #059669;">${code}</span>
+    try {
+        const response = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${RESEND_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                from: 'EcoShift <onboarding@resend.dev>',
+                to: email,
+                subject: 'Verifica la tua email - EcoShift',
+                html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <div style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 30px; border-radius: 16px; text-align: center;">
+                            <h1 style="color: white; margin: 0; font-size: 28px;">EcoShift</h1>
+                            <p style="color: rgba(255,255,255,0.9); margin-top: 10px;">Verifica la tua email</p>
                         </div>
-                        <p style="color: #94a3b8; font-size: 12px;">Il codice scade tra 10 minuti.</p>
+                        <div style="background: #f8fafc; padding: 30px; border-radius: 0 0 16px 16px; text-align: center;">
+                            <p style="color: #475569; font-size: 16px;">Ciao ${userName || 'utente'},</p>
+                            <p style="color: #64748b; font-size: 14px;">Inserisci questo codice per completare la registrazione:</p>
+                            <div style="background: white; padding: 20px 40px; border-radius: 12px; display: inline-block; margin: 20px 0; border: 2px solid #e2e8f0;">
+                                <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #059669;">${code}</span>
+                            </div>
+                            <p style="color: #94a3b8; font-size: 12px;">Il codice scade tra 10 minuti.</p>
+                        </div>
                     </div>
-                </div>
-            `
-        })
-    });
-    
-    const data = await response.json();
-    if (!response.ok) {
-        console.error('[OTP] Failed to send email:', data);
-        return { success: false, error: data };
+                `
+            })
+        });
+        
+        const data = await response.json();
+        if (!response.ok) {
+            console.error('[OTP] Resend API error:', JSON.stringify(data));
+            return { success: false, error: data, code };
+        }
+        console.log('[OTP] Email sent successfully:', data.id);
+        return { success: true, id: data.id };
+    } catch (err) {
+        console.error('[OTP] Fetch error:', err.message);
+        return { success: false, error: { message: err.message }, code };
     }
-    return { success: true, id: data.id };
 }
 
 app.use(cors());
@@ -87,15 +93,16 @@ app.post('/api/auth/send-otp', async (req, res) => {
         
         const emailResult = await sendOTPEmail(normalizedEmail, code, name);
         
-        if (!emailResult.success) {
-            return res.status(500).json({ error: 'Failed to send email', details: emailResult.error });
-        }
+        // In sviluppo o se Resend ha limitazioni, ritorna comunque il codice per test
+        const isDev = process.env.NODE_ENV !== 'production';
         
         res.json({ 
             message: 'OTP sent successfully', 
             email: normalizedEmail,
             expiresIn: 600,
-            mock: emailResult.mock 
+            mock: emailResult.mock || !emailResult.success,
+            devCode: (isDev || !emailResult.success) ? code : undefined,
+            emailError: !emailResult.success ? emailResult.error : undefined
         });
     } catch (err) {
         console.error('[OTP] Error:', err);

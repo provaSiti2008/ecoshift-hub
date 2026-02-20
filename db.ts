@@ -43,7 +43,7 @@ class MamaDB {
     return { ok: true };
   }
 
-  async sendOTP(email: string, name: string, role: string, password: string): Promise<{ ok: boolean; error?: string; mock?: boolean }> {
+  async sendOTP(email: string, name: string, role: string, password: string): Promise<{ ok: boolean; error?: string; mock?: boolean; devCode?: string; emailError?: any }> {
     const res = await fetch(`${API_URL}/auth/send-otp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -53,7 +53,7 @@ class MamaDB {
     if (!res.ok) {
       return { ok: false, error: data.error || res.statusText };
     }
-    return { ok: true, mock: data.mock };
+    return { ok: true, mock: data.mock, devCode: data.devCode, emailError: data.emailError };
   }
 
   async verifyOTP(email: string, code: string): Promise<{ ok: boolean; error?: string; user?: User }> {
