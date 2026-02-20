@@ -79,10 +79,11 @@ app.post('/api/auth/send-otp', async (req, res) => {
         const now = new Date();
         const expiresAt = new Date(now.getTime() + 10 * 60 * 1000);
         
-        await db.query(
-            `INSERT INTO email_verifications (id, email, code, userData, createdAt, expiresAt) VALUES (?, ?, ?, ?, ?, ?)`,
-            [id, normalizedEmail, code, JSON.stringify({ name, role: role || 'BOTH', password }), now.toISOString(), expiresAt.toISOString()]
-        );
+        const insertSql = isPostgres
+            ? `INSERT INTO email_verifications (id, email, code, "userData", "createdAt", "expiresAt") VALUES (?, ?, ?, ?, ?, ?)`
+            : `INSERT INTO email_verifications (id, email, code, userData, createdAt, expiresAt) VALUES (?, ?, ?, ?, ?, ?)`;
+        
+        await db.query(insertSql, [id, normalizedEmail, code, JSON.stringify({ name, role: role || 'BOTH', password }), now.toISOString(), expiresAt.toISOString()]);
         
         const emailResult = await sendOTPEmail(normalizedEmail, code, name);
         
@@ -113,7 +114,7 @@ app.post('/api/auth/verify-otp', async (req, res) => {
     
     try {
         const sql = isPostgres
-            ? 'SELECT * FROM email_verifications WHERE email = ? AND code = ? AND verified = 0 ORDER BY "createdAt" DESC LIMIT 1'
+            ? 'SELECT id, email, code, "userData" as "userData", "createdAt" as "createdAt", "expiresAt" as "expiresAt", verified FROM email_verifications WHERE email = ? AND code = ? AND verified = 0 ORDER BY "createdAt" DESC LIMIT 1'
             : 'SELECT * FROM email_verifications WHERE email = ? AND code = ? AND verified = 0 ORDER BY createdAt DESC LIMIT 1';
         
         const rows = await db.query(sql, [normalizedEmail, code]);
@@ -174,7 +175,7 @@ app.post('/api/auth/resend-otp', async (req, res) => {
     
     try {
         const sql = isPostgres
-            ? 'SELECT * FROM email_verifications WHERE email = ? AND verified = 0 ORDER BY "createdAt" DESC LIMIT 1'
+            ? 'SELECT id, email, code, "userData" as "userData", "createdAt" as "createdAt", "expiresAt" as "expiresAt", verified FROM email_verifications WHERE email = ? AND verified = 0 ORDER BY "createdAt" DESC LIMIT 1'
             : 'SELECT * FROM email_verifications WHERE email = ? AND verified = 0 ORDER BY createdAt DESC LIMIT 1';
         
         const rows = await db.query(sql, [normalizedEmail]);
@@ -184,16 +185,17 @@ app.post('/api/auth/resend-otp', async (req, res) => {
         }
         
         const verification = rows[0];
-        const userData = JSON.parse(verification.userData);
+        const userData = JSON.parse(verification.userData || verification.userdata);
         const code = generateOTP();
         const id = crypto.randomUUID();
         const now = new Date();
         const expiresAt = new Date(now.getTime() + 10 * 60 * 1000);
         
-        await db.query(
-            `INSERT INTO email_verifications (id, email, code, userData, createdAt, expiresAt) VALUES (?, ?, ?, ?, ?, ?)`,
-            [id, normalizedEmail, code, JSON.stringify(userData), now.toISOString(), expiresAt.toISOString()]
-        );
+        const insertSql = isPostgres
+            ? `INSERT INTO email_verifications (id, email, code, "userData", "createdAt", "expiresAt") VALUES (?, ?, ?, ?, ?, ?)`
+            : `INSERT INTO email_verifications (id, email, code, userData, createdAt, expiresAt) VALUES (?, ?, ?, ?, ?, ?)`;
+        
+        await db.query(insertSql, [id, normalizedEmail, code, JSON.stringify(userData), now.toISOString(), expiresAt.toISOString()]);
         
         const emailResult = await sendOTPEmail(normalizedEmail, code, userData.name);
         
