@@ -27,7 +27,7 @@ async function sendOTPEmail(email, code, userName) {
                 'api-key': BREVO_API_KEY
             },
             body: JSON.stringify({
-                sender: { name: 'EcoShift', email: 'noreply@ecoshift.app' },
+                sender: { name: 'EcoShift', email: 'aivideos.tiktok06@gmail.com' },
                 to: [{ email: email, name: userName || 'Utente' }],
                 subject: 'Verifica la tua email - EcoShift',
                 htmlContent: `
