@@ -6,31 +6,33 @@ const { isPostgres } = require('./database');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
 
 function generateOTP() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 async function sendOTPEmail(email, code, userName) {
-    if (!RESEND_API_KEY) {
-        console.log('[OTP] RESEND_API_KEY not set. Code:', code, 'for:', email);
+    if (!BREVO_API_KEY) {
+        console.log('[OTP] BREVO_API_KEY not set. Code:', code, 'for:', email);
         return { success: true, mock: true, code };
     }
     
     try {
-        const response = await fetch('https://api.resend.com/emails', {
+        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${RESEND_API_KEY}`,
-                'Content-Type': 'application/json'
+                'accept': 'application/json',
+                'content-type': 'application/json',
+                'api-key': BREVO_API_KEY
             },
             body: JSON.stringify({
-                from: 'EcoShift <onboarding@resend.dev>',
-                to: email,
+                sender: { name: 'EcoShift', email: 'noreply@ecoshift.app' },
+                to: [{ email: email, name: userName || 'Utente' }],
                 subject: 'Verifica la tua email - EcoShift',
-                html: `
-                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                htmlContent: `
+                    <html>
+                    <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                         <div style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 30px; border-radius: 16px; text-align: center;">
                             <h1 style="color: white; margin: 0; font-size: 28px;">EcoShift</h1>
                             <p style="color: rgba(255,255,255,0.9); margin-top: 10px;">Verifica la tua email</p>
@@ -43,18 +45,19 @@ async function sendOTPEmail(email, code, userName) {
                             </div>
                             <p style="color: #94a3b8; font-size: 12px;">Il codice scade tra 10 minuti.</p>
                         </div>
-                    </div>
+                    </body>
+                    </html>
                 `
             })
         });
         
         const data = await response.json();
         if (!response.ok) {
-            console.error('[OTP] Resend API error:', JSON.stringify(data));
+            console.error('[OTP] Brevo API error:', JSON.stringify(data));
             return { success: false, error: data, code };
         }
-        console.log('[OTP] Email sent successfully:', data.id);
-        return { success: true, id: data.id };
+        console.log('[OTP] Email sent successfully via Brevo:', data.messageId);
+        return { success: true, id: data.messageId };
     } catch (err) {
         console.error('[OTP] Fetch error:', err.message);
         return { success: false, error: { message: err.message }, code };
