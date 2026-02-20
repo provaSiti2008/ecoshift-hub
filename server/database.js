@@ -211,6 +211,22 @@ async function initDb() {
     // Table already exists
   }
 
+  // Migration: Create email_verifications table for OTP
+  try {
+    await query(`CREATE TABLE IF NOT EXISTS email_verifications (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL,
+      code TEXT NOT NULL,
+      userData TEXT NOT NULL,
+      createdAt TEXT NOT NULL,
+      expiresAt TEXT NOT NULL,
+      verified INTEGER DEFAULT 0
+    )`);
+    console.log('Migration: Created email_verifications table');
+  } catch (e) {
+    // Table already exists
+  }
+
   console.log('Database tables initialized.');
 }
 

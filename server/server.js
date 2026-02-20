@@ -1,15 +1,211 @@
 const express = require('express');
 const cors = require('cors');
+const crypto = require('crypto');
 const db = require('./database');
 const { isPostgres } = require('./database');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+
+function generateOTP() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+async function sendOTPEmail(email, code, userName) {
+    if (!RESEND_API_KEY) {
+        console.log('[OTP] RESEND_API_KEY not set, skipping email send. Code:', code);
+        return { success: true, mock: true };
+    }
+    
+    const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${RESEND_API_KEY}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            from: 'EcoShift <noreply@resend.dev>',
+            to: email,
+            subject: 'Verifica la tua email - EcoShift',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <div style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 30px; border-radius: 16px; text-align: center;">
+                        <h1 style="color: white; margin: 0; font-size: 28px;">EcoShift</h1>
+                        <p style="color: rgba(255,255,255,0.9); margin-top: 10px;">Verifica la tua email</p>
+                    </div>
+                    <div style="background: #f8fafc; padding: 30px; border-radius: 0 0 16px 16px; text-align: center;">
+                        <p style="color: #475569; font-size: 16px;">Ciao ${userName || 'utente'},</p>
+                        <p style="color: #64748b; font-size: 14px;">Inserisci questo codice per completare la registrazione:</p>
+                        <div style="background: white; padding: 20px 40px; border-radius: 12px; display: inline-block; margin: 20px 0; border: 2px solid #e2e8f0;">
+                            <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #059669;">${code}</span>
+                        </div>
+                        <p style="color: #94a3b8; font-size: 12px;">Il codice scade tra 10 minuti.</p>
+                    </div>
+                </div>
+            `
+        })
+    });
+    
+    const data = await response.json();
+    if (!response.ok) {
+        console.error('[OTP] Failed to send email:', data);
+        return { success: false, error: data };
+    }
+    return { success: true, id: data.id };
+}
+
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// --- Auth: register (with verification email) ---
+// --- Auth: Send OTP for registration ---
+app.post('/api/auth/send-otp', async (req, res) => {
+    const { email, name, role, password } = req.body;
+    const normalizedEmail = (email || '').toLowerCase().trim();
+    
+    if (!normalizedEmail || !name || !password) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    try {
+        const existing = await db.query('SELECT id FROM users WHERE id = ?', [normalizedEmail]);
+        if (existing.length > 0) {
+            return res.status(409).json({ error: 'EMAIL_EXISTS' });
+        }
+        
+        const code = generateOTP();
+        const id = crypto.randomUUID();
+        const now = new Date();
+        const expiresAt = new Date(now.getTime() + 10 * 60 * 1000);
+        
+        await db.query(
+            `INSERT INTO email_verifications (id, email, code, userData, createdAt, expiresAt) VALUES (?, ?, ?, ?, ?, ?)`,
+            [id, normalizedEmail, code, JSON.stringify({ name, role: role || 'BOTH', password }), now.toISOString(), expiresAt.toISOString()]
+        );
+        
+        const emailResult = await sendOTPEmail(normalizedEmail, code, name);
+        
+        if (!emailResult.success) {
+            return res.status(500).json({ error: 'Failed to send email', details: emailResult.error });
+        }
+        
+        res.json({ 
+            message: 'OTP sent successfully', 
+            email: normalizedEmail,
+            expiresIn: 600,
+            mock: emailResult.mock 
+        });
+    } catch (err) {
+        console.error('[OTP] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- Auth: Verify OTP ---
+app.post('/api/auth/verify-otp', async (req, res) => {
+    const { email, code } = req.body;
+    const normalizedEmail = (email || '').toLowerCase().trim();
+    
+    if (!normalizedEmail || !code) {
+        return res.status(400).json({ error: 'Missing email or code' });
+    }
+    
+    try {
+        const sql = isPostgres
+            ? 'SELECT * FROM email_verifications WHERE email = ? AND code = ? AND verified = 0 ORDER BY "createdAt" DESC LIMIT 1'
+            : 'SELECT * FROM email_verifications WHERE email = ? AND code = ? AND verified = 0 ORDER BY createdAt DESC LIMIT 1';
+        
+        const rows = await db.query(sql, [normalizedEmail, code]);
+        
+        if (rows.length === 0) {
+            return res.status(400).json({ error: 'INVALID_CODE' });
+        }
+        
+        const verification = rows[0];
+        const now = new Date();
+        const expiresAt = new Date(verification.expiresAt);
+        
+        if (now > expiresAt) {
+            return res.status(400).json({ error: 'CODE_EXPIRED' });
+        }
+        
+        const userData = JSON.parse(verification.userData);
+        
+        const insertSql = isPostgres
+            ? `INSERT INTO users (id, name, role, skills, "accessibilityNeeds", credits, password) VALUES (?, ?, ?, ?, ?, ?, ?)`
+            : `INSERT INTO users (id, name, role, skills, accessibilityNeeds, credits, password) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+        
+        await db.query(insertSql, [
+            normalizedEmail,
+            userData.name,
+            userData.role,
+            JSON.stringify([]),
+            JSON.stringify([]),
+            500,
+            userData.password
+        ]);
+        
+        await db.query('UPDATE email_verifications SET verified = 1 WHERE id = ?', [verification.id]);
+        
+        res.json({ 
+            message: 'Email verified successfully', 
+            user: { 
+                id: normalizedEmail, 
+                name: userData.name, 
+                role: userData.role,
+                credits: 500
+            } 
+        });
+    } catch (err) {
+        console.error('[OTP] Verify error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- Auth: Resend OTP ---
+app.post('/api/auth/resend-otp', async (req, res) => {
+    const { email } = req.body;
+    const normalizedEmail = (email || '').toLowerCase().trim();
+    
+    if (!normalizedEmail) {
+        return res.status(400).json({ error: 'Missing email' });
+    }
+    
+    try {
+        const sql = isPostgres
+            ? 'SELECT * FROM email_verifications WHERE email = ? AND verified = 0 ORDER BY "createdAt" DESC LIMIT 1'
+            : 'SELECT * FROM email_verifications WHERE email = ? AND verified = 0 ORDER BY createdAt DESC LIMIT 1';
+        
+        const rows = await db.query(sql, [normalizedEmail]);
+        
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'NO_PENDING_VERIFICATION' });
+        }
+        
+        const verification = rows[0];
+        const userData = JSON.parse(verification.userData);
+        const code = generateOTP();
+        const id = crypto.randomUUID();
+        const now = new Date();
+        const expiresAt = new Date(now.getTime() + 10 * 60 * 1000);
+        
+        await db.query(
+            `INSERT INTO email_verifications (id, email, code, userData, createdAt, expiresAt) VALUES (?, ?, ?, ?, ?, ?)`,
+            [id, normalizedEmail, code, JSON.stringify(userData), now.toISOString(), expiresAt.toISOString()]
+        );
+        
+        const emailResult = await sendOTPEmail(normalizedEmail, code, userData.name);
+        
+        res.json({ 
+            message: 'OTP resent successfully',
+            expiresIn: 600,
+            mock: emailResult.mock
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 app.post('/api/auth/register', async (req, res) => {
     const user = req.body;
     const normalizedId = (user.id || '').toLowerCase().trim();

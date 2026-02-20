@@ -30,7 +30,6 @@ class MamaDB {
     this.triggerSyncUI();
   }
 
-  /** Register new user */
   async register(user: User): Promise<{ ok: boolean; error?: string }> {
     const res = await fetch(`${API_URL}/auth/register`, {
       method: 'POST',
@@ -42,6 +41,45 @@ class MamaDB {
       return { ok: false, error: data.error || res.statusText };
     }
     return { ok: true };
+  }
+
+  async sendOTP(email: string, name: string, role: string, password: string): Promise<{ ok: boolean; error?: string; mock?: boolean }> {
+    const res = await fetch(`${API_URL}/auth/send-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, name, role, password })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { ok: false, error: data.error || res.statusText };
+    }
+    return { ok: true, mock: data.mock };
+  }
+
+  async verifyOTP(email: string, code: string): Promise<{ ok: boolean; error?: string; user?: User }> {
+    const res = await fetch(`${API_URL}/auth/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { ok: false, error: data.error || res.statusText };
+    }
+    return { ok: true, user: data.user };
+  }
+
+  async resendOTP(email: string): Promise<{ ok: boolean; error?: string; mock?: boolean }> {
+    const res = await fetch(`${API_URL}/auth/resend-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { ok: false, error: data.error || res.statusText };
+    }
+    return { ok: true, mock: data.mock };
   }
 
   async updateUser(userId: string, updates: Partial<User>): Promise<User | null> {
