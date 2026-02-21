@@ -191,6 +191,13 @@ export interface Translations {
     unknown_destination: string;
     participation_cancelled: string;
     commitment_removed: string;
+
+    footer_about: string;
+    footer_privacy: string;
+    footer_terms: string;
+    footer_contact: string;
+    footer_pnrr: string;
+    footer_copyright: string;
 }
 
 // --- Translations Data ---
@@ -363,7 +370,14 @@ export const translations: Record<Language, Translations> = {
         trip_cancelled_notification: 'Il viaggio per {to} è stato cancellato dal driver.',
         unknown_destination: 'Destinazione sconosciuta',
         participation_cancelled: 'Partecipazione annollata.',
-        commitment_removed: 'Impegno rimosso.'
+        commitment_removed: 'Impegno rimosso.',
+
+        footer_about: 'Chi siamo',
+        footer_privacy: 'Privacy',
+        footer_terms: 'Termini',
+        footer_contact: 'Contatti',
+        footer_pnrr: 'Progetto PNRR',
+        footer_copyright: '© 2025 EcoShift Hub. Tutti i diritti riservati.'
     },
     en: {
         app_name: 'EcoShift Hub',
@@ -533,7 +547,14 @@ export const translations: Record<Language, Translations> = {
         trip_cancelled_notification: 'The trip to {to} was cancelled by the driver.',
         unknown_destination: 'Unknown destination',
         participation_cancelled: 'Participation cancelled.',
-        commitment_removed: 'Commitment removed.'
+        commitment_removed: 'Commitment removed.',
+
+        footer_about: 'About',
+        footer_privacy: 'Privacy',
+        footer_terms: 'Terms',
+        footer_contact: 'Contact',
+        footer_pnrr: 'PNRR Project',
+        footer_copyright: '© 2025 EcoShift Hub. All rights reserved.'
     },
     es: {
         app_name: 'EcoShift Hub',
@@ -703,7 +724,14 @@ export const translations: Record<Language, Translations> = {
         trip_cancelled_notification: 'El viaje para {to} fue cancelado por el conductor.',
         unknown_destination: 'Destino desconocido',
         participation_cancelled: 'Participación cancelada.',
-        commitment_removed: 'Compromiso eliminado.'
+        commitment_removed: 'Compromiso eliminado.',
+
+        footer_about: 'Quiénes somos',
+        footer_privacy: 'Privacidad',
+        footer_terms: 'Términos',
+        footer_contact: 'Contacto',
+        footer_pnrr: 'Proyecto PNRR',
+        footer_copyright: '© 2025 EcoShift Hub. Todos los derechos reservados.'
     },
     fr: {
         app_name: 'EcoShift Hub',
@@ -873,7 +901,14 @@ export const translations: Record<Language, Translations> = {
         trip_cancelled_notification: 'Le trajet pour {to} a été annulé par le conducteur.',
         unknown_destination: 'Destination inconnue',
         participation_cancelled: 'Participation annulée.',
-        commitment_removed: 'Engagement supprimé.'
+        commitment_removed: 'Engagement supprimé.',
+
+        footer_about: 'À propos',
+        footer_privacy: 'Confidentialité',
+        footer_terms: 'Conditions',
+        footer_contact: 'Contact',
+        footer_pnrr: 'Projet PNRR',
+        footer_copyright: '© 2025 EcoShift Hub. Tous droits réservés.'
     },
     de: {
         app_name: 'EcoShift Hub',
@@ -1043,7 +1078,14 @@ export const translations: Record<Language, Translations> = {
         trip_cancelled_notification: 'Die Fahrt nach {to} wurde vom Fahrer storniert.',
         unknown_destination: 'Unbekanntes Ziel',
         participation_cancelled: 'Teilnahme storniert.',
-        commitment_removed: 'Zusage entfernt.'
+        commitment_removed: 'Zusage entfernt.',
+
+        footer_about: 'Über uns',
+        footer_privacy: 'Datenschutz',
+        footer_terms: 'AGB',
+        footer_contact: 'Kontakt',
+        footer_pnrr: 'PNRR Projekt',
+        footer_copyright: '© 2025 EcoShift Hub. Alle Rechte vorbehalten.'
     },
     nl: {
         app_name: 'EcoShift Hub',
@@ -1213,7 +1255,14 @@ export const translations: Record<Language, Translations> = {
         trip_cancelled_notification: 'De reis naar {to} is geannuleerd door de chauffeur.',
         unknown_destination: 'Onbekende bestemming',
         participation_cancelled: 'Deelname geannuleerd.',
-        commitment_removed: 'Verbintenis verwijderd.'
+        commitment_removed: 'Verbintenis verwijderd.',
+
+        footer_about: 'Over ons',
+        footer_privacy: 'Privacy',
+        footer_terms: 'Voorwaarden',
+        footer_contact: 'Contact',
+        footer_pnrr: 'PNRR Project',
+        footer_copyright: '© 2025 EcoShift Hub. Alle rechten voorbehouden.'
     }
 };
 

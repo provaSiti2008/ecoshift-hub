@@ -318,8 +318,8 @@ const App: React.FC = () => {
         </nav>
       </div>
 
-      {/* Main Content Area */}
-      <div className="relative z-10 pt-28 pb-32 h-screen overflow-y-auto no-scrollbar scroll-smooth">
+{/* Main Content Area */}
+      <div className="relative z-10 pt-28 pb-32 md:pb-16 h-screen overflow-y-auto no-scrollbar scroll-smooth">
         <Dashboard
           currentUser={currentUser}
           isOfferModalOpen={isOfferModalOpen}
@@ -361,13 +361,30 @@ const App: React.FC = () => {
         </nav>
       </div>
 
-      {/* Modals */}
+{/* Modals */}
       <ProfileModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
         user={currentUser}
         onUpdate={handleUserUpdate}
       />
+
+      {/* Footer */}
+      <footer className="fixed bottom-0 left-0 right-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 py-3 px-4 hidden md:block">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+          <div className="flex items-center gap-4">
+            <span className="font-semibold text-brand-600 dark:text-brand-400">{t.footer_pnrr}</span>
+            <span className="text-slate-300 dark:text-slate-600">|</span>
+            <span>{t.footer_copyright}</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <a href="#about" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">{t.footer_about}</a>
+            <a href="#privacy" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">{t.footer_privacy}</a>
+            <a href="#terms" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">{t.footer_terms}</a>
+            <a href="#contact" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">{t.footer_contact}</a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
