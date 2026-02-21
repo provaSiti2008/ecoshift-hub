@@ -82,6 +82,32 @@ class MamaDB {
     return { ok: true, mock: data.mock };
   }
 
+  async forgotPassword(email: string): Promise<{ ok: boolean; error?: string; mock?: boolean; devCode?: string }> {
+    const res = await fetch(`${API_URL}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { ok: false, error: data.error || res.statusText };
+    }
+    return { ok: true, mock: data.mock, devCode: data.devCode };
+  }
+
+  async resetPassword(email: string, code: string, newPassword: string): Promise<{ ok: boolean; error?: string }> {
+    const res = await fetch(`${API_URL}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code, newPassword })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { ok: false, error: data.error || res.statusText };
+    }
+    return { ok: true };
+  }
+
   async updateUser(userId: string, updates: Partial<User>): Promise<User | null> {
     const users = await this.getUsers();
     const existing = users.find(u => u.id === userId);

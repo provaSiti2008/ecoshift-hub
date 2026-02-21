@@ -9,11 +9,13 @@ interface AuthScreenProps {
 
 export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
   const { t } = useLanguage();
-  const [view, setView] = useState<'login' | 'register' | 'verify'>('login');
+  const [view, setView] = useState<'login' | 'register' | 'verify' | 'forgot-password' | 'reset-password'>('login');
 
   // Form fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState<UserRole>(UserRole.BOTH);
 
@@ -31,6 +33,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     setError('');
     setSuccessMsg('');
     setPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
     setOtpCode('');
     setPendingEmail('');
     setIsMockMode(false);
@@ -50,7 +54,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
       const user = users.find(u => u.id === normalizedEmail);
 
       if (user) {
-        // Password check (client-side for prototype)
         if (user.password && user.password !== password) {
           setError(t.auth_error_password);
           setLoading(false);
@@ -92,7 +95,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
         } else if (result.mock) {
           setSuccessMsg('Modalità sviluppo: controlla la console del server per il codice OTP');
         } else if (result.emailError) {
-          setSuccessMsg('Email non inviata (verifica dominio su Resend). Usa il codice mostrato qui sotto.');
+          setSuccessMsg('Email non inviata. Usa il codice mostrato qui sotto.');
         } else {
           setSuccessMsg('Codice inviato alla tua email');
         }
@@ -162,6 +165,88 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccessMsg('');
+
+    if (!email) return;
+
+    setLoading(true);
+    const normalizedEmail = email.toLowerCase().trim();
+
+    try {
+      const result = await db.forgotPassword(normalizedEmail);
+      
+      if (result.ok) {
+        setPendingEmail(normalizedEmail);
+        setIsMockMode(!!result.mock || !!result.devCode);
+        setView('reset-password');
+        if (result.devCode) {
+          setSuccessMsg(`Codice OTP (test): ${result.devCode}`);
+          setOtpCode(result.devCode);
+        } else {
+          setSuccessMsg('Codice inviato alla tua email');
+        }
+      } else {
+        if (result.error === 'EMAIL_NOT_FOUND') {
+          setError('Nessun account associato a questa email');
+        } else {
+          setError(result.error || 'Failed to send reset code');
+        }
+      }
+    } catch (err: any) {
+      setError(err.message || 'Error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!otpCode || otpCode.length !== 6) {
+      setError('Inserisci un codice a 6 cifre');
+      return;
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      setError('La password deve avere almeno 6 caratteri');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError('Le password non coincidono');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await db.resetPassword(pendingEmail, otpCode, newPassword);
+      
+      if (result.ok) {
+        setSuccessMsg('Password aggiornata con successo!');
+        setTimeout(() => {
+          setView('login');
+          clearState();
+        }, 1500);
+      } else {
+        if (result.error === 'INVALID_CODE') {
+          setError('Codice non valido');
+        } else if (result.error === 'CODE_EXPIRED') {
+          setError('Codice scaduto, richiedi un nuovo codice');
+        } else {
+          setError(result.error || 'Reset failed');
+        }
+      }
+    } catch (err: any) {
+      setError(err.message || 'Reset error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     if (view === 'login') {
       await handleLogin(e);
@@ -169,6 +254,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
       await handleSignup(e);
     } else if (view === 'verify') {
       await handleVerifyOTP(e);
+    } else if (view === 'forgot-password') {
+      await handleForgotPassword(e);
+    } else if (view === 'reset-password') {
+      await handleResetPassword(e);
     }
   };
 
@@ -177,13 +266,13 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
       {/* Dynamic Background */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-brand-500/20 rounded-full blur-[100px] animate-float opacity-60"></div>
-        <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-accent-neon/20 rounded-full blur-[100px] animate-pulse-slow opacity-60"></div>
+        <div className="absolute bottom-[-20%] right: [-10%] w-[600px] h-[600px] bg-accent-neon/20 rounded-full blur-[100px] animate-pulse-slow opacity:60"></div>
         <div className="absolute top-[30%] left-[40%] w-[300px] h-[300px] bg-accent-gold/10 rounded-full blur-[80px] animate-float opacity-40 delay-1000"></div>
       </div>
 
       <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/20 relative z-10 animate-fade-in-up">
 
-        {/* Left Col: Visuals (Hidden on mobile sometimes, but let's keep it for premium feel) */}
+        {/* Left Col: Visuals */}
         <div className="relative overflow-hidden p-10 flex flex-col justify-between bg-gradient-to-br from-brand-600 to-brand-800 text-white">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
@@ -210,7 +299,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
 
         {/* Right Col: Form */}
         <div className="p-8 md:p-12 flex flex-col justify-center bg-white/50 dark:bg-transparent">
-          {view !== 'verify' && (
+          {view !== 'verify' && view !== 'reset-password' && view !== 'forgot-password' && (
             <div className="mb-8">
               <div className="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl">
                 <button
@@ -233,21 +322,26 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
             </div>
           )}
 
-          {view === 'verify' && (
+          {(view === 'verify' || view === 'reset-password' || view === 'forgot-password') && (
             <div className="mb-6">
               <button
-                onClick={() => { setView('register'); clearState(); }}
+                onClick={() => { setView(view === 'reset-password' ? 'forgot-password' : 'login'); clearState(); }}
                 className="text-sm text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 flex items-center gap-2"
               >
                 ← Indietro
               </button>
-              <h2 className="text-2xl font-black text-slate-800 dark:text-white mt-4">Verifica Email</h2>
+              <h2 className="text-2xl font-black text-slate-800 dark:text-white mt-4">
+                {view === 'verify' ? 'Verifica Email' : view === 'forgot-password' ? 'Password Dimenticata' : 'Reimposta Password'}
+              </h2>
               <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">
-                Abbiamo inviato un codice a <span className="font-semibold">{pendingEmail}</span>
+                {view === 'forgot-password' 
+                  ? 'Inserisci la tua email per ricevere un codice di reset'
+                  : <>Abbiamo inviato un codice a <span className="font-semibold">{pendingEmail}</span></>
+                }
               </p>
               {isMockMode && (
                 <p className="text-amber-600 dark:text-amber-400 text-xs mt-2 font-semibold">
-                  ⚠️ Modalità sviluppo: il codice viene mostrato nella console del server
+                  Modalità sviluppo: il codice viene mostrato sopra
                 </p>
               )}
             </div>
@@ -268,7 +362,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {view === 'verify' ? (
+            {view === 'verify' && (
               <>
                 <div className="space-y-1.5">
                   <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Codice di verifica</label>
@@ -306,7 +400,89 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
                   </button>
                 </div>
               </>
-            ) : (
+            )}
+
+            {view === 'forgot-password' && (
+              <>
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Email</label>
+                  <input
+                    required
+                    type="email"
+                    placeholder="nome.cognome@polimi.it"
+                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading || !email}
+                  className="btn-premium w-full py-5 mt-6 text-sm tracking-widest uppercase shadow-xl hover:shadow-2xl disabled:opacity-70 disabled:grayscale"
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                      Invio...
+                    </span>
+                  ) : 'Invia codice'}
+                </button>
+              </>
+            )}
+
+            {view === 'reset-password' && (
+              <>
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Codice di verifica</label>
+                  <input
+                    required
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="000000"
+                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-2xl font-bold text-center tracking-[0.5em] text-slate-800 dark:text-white placeholder:text-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                    value={otpCode}
+                    onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Nuova Password</label>
+                  <input
+                    required
+                    type="password"
+                    placeholder="••••••••"
+                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Conferma Password</label>
+                  <input
+                    required
+                    type="password"
+                    placeholder="••••••••"
+                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading || otpCode.length !== 6 || !newPassword || !confirmPassword}
+                  className="btn-premium w-full py-5 mt-6 text-sm tracking-widest uppercase shadow-xl hover:shadow-2xl disabled:opacity-70 disabled:grayscale"
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                      Reimposta...
+                    </span>
+                  ) : 'Reimposta Password'}
+                </button>
+              </>
+            )}
+
+            {(view === 'login' || view === 'register') && (
               <>
                 {view === 'register' && (
                   <div className="space-y-1.5">
@@ -376,6 +552,18 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
                     </span>
                   ) : (view === 'login' ? t.login_action : t.register_action)}
                 </button>
+
+                {view === 'login' && (
+                  <div className="text-center mt-4">
+                    <button
+                      type="button"
+                      onClick={() => { setView('forgot-password'); clearState(); }}
+                      className="text-sm text-brand-600 hover:text-brand-700 font-semibold"
+                    >
+                      Password dimenticata?
+                    </button>
+                  </div>
+                )}
               </>
             )}
           </form>

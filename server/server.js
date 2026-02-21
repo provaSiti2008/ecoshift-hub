@@ -218,6 +218,144 @@ app.post('/api/auth/resend-otp', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+// --- Auth: Forgot Password - Send OTP ---
+app.post('/api/auth/forgot-password', async (req, res) => {
+    const { email } = req.body;
+    const normalizedEmail = (email || '').toLowerCase().trim();
+    
+    if (!normalizedEmail) {
+        return res.status(400).json({ error: 'Missing email' });
+    }
+    
+    try {
+        const existing = await db.query('SELECT id, name FROM users WHERE id = ?', [normalizedEmail]);
+        if (existing.length === 0) {
+            return res.status(404).json({ error: 'EMAIL_NOT_FOUND' });
+        }
+        
+        const user = existing[0];
+        const code = generateOTP();
+        const id = crypto.randomUUID();
+        const now = new Date();
+        const expiresAt = new Date(now.getTime() + 10 * 60 * 1000);
+        
+        const insertSql = isPostgres
+            ? `INSERT INTO password_resets (id, email, code, "createdAt", "expiresAt") VALUES (?, ?, ?, ?, ?)`
+            : `INSERT INTO password_resets (id, email, code, createdAt, expiresAt) VALUES (?, ?, ?, ?, ?)`;
+        
+        await db.query(insertSql, [id, normalizedEmail, code, now.toISOString(), expiresAt.toISOString()]);
+        
+        const emailResult = await sendPasswordResetEmail(normalizedEmail, code, user.name);
+        
+        res.json({ 
+            message: 'Reset code sent successfully', 
+            email: normalizedEmail,
+            expiresIn: 600,
+            mock: emailResult.mock,
+            devCode: emailResult.code
+        });
+    } catch (err) {
+        console.error('[Forgot Password] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- Auth: Reset Password - Verify OTP and Update Password ---
+app.post('/api/auth/reset-password', async (req, res) => {
+    const { email, code, newPassword } = req.body;
+    const normalizedEmail = (email || '').toLowerCase().trim();
+    
+    if (!normalizedEmail || !code || !newPassword) {
+        return res.status(400).json({ error: 'Missing email, code or newPassword' });
+    }
+    
+    try {
+        const sql = isPostgres
+            ? 'SELECT * FROM password_resets WHERE email = ? AND code = ? AND used = 0 ORDER BY "createdAt" DESC LIMIT 1'
+            : 'SELECT * FROM password_resets WHERE email = ? AND code = ? AND used = 0 ORDER BY createdAt DESC LIMIT 1';
+        
+        const rows = await db.query(sql, [normalizedEmail, code]);
+        
+        if (rows.length === 0) {
+            return res.status(400).json({ error: 'INVALID_CODE' });
+        }
+        
+        const reset = rows[0];
+        const now = new Date();
+        const expiresAt = new Date(reset.expiresAt || reset.expiresat);
+        
+        if (now > expiresAt) {
+            return res.status(400).json({ error: 'CODE_EXPIRED' });
+        }
+        
+        const updateSql = isPostgres
+            ? `UPDATE users SET password = ? WHERE id = ?`
+            : `UPDATE users SET password = ? WHERE id = ?`;
+        
+        await db.query(updateSql, [newPassword, normalizedEmail]);
+        
+        await db.query('UPDATE password_resets SET used = 1 WHERE id = ?', [reset.id]);
+        
+        res.json({ message: 'Password reset successfully' });
+    } catch (err) {
+        console.error('[Reset Password] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+async function sendPasswordResetEmail(email, code, userName) {
+    if (!BREVO_API_KEY) {
+        console.log('[Password Reset] BREVO_API_KEY not set. Code:', code, 'for:', email);
+        return { success: true, mock: true, code };
+    }
+    
+    try {
+        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+                'accept': 'application/json',
+                'content-type': 'application/json',
+                'api-key': BREVO_API_KEY
+            },
+            body: JSON.stringify({
+                sender: { name: 'EcoShift', email: 'aivideos.tiktok06@gmail.com' },
+                to: [{ email: email, name: userName || 'Utente' }],
+                subject: 'Reimposta la tua password - EcoShift',
+                htmlContent: `
+                    <html>
+                    <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <div style="background: linear-gradient(135deg, #dc2626 0%, #f87171 100%); padding: 30px; border-radius: 16px; text-align: center;">
+                            <h1 style="color: white; margin: 0; font-size: 28px;">EcoShift</h1>
+                            <p style="color: rgba(255,255,255,0.9); margin-top: 10px;">Reimposta la tua password</p>
+                        </div>
+                        <div style="background: #f8fafc; padding: 30px; border-radius: 0 0 16px 16px; text-align: center;">
+                            <p style="color: #475569; font-size: 16px;">Ciao ${userName || 'utente'},</p>
+                            <p style="color: #64748b; font-size: 14px;">Hai richiesto di reimpostare la tua password. Inserisci questo codice:</p>
+                            <div style="background: white; padding: 20px 40px; border-radius: 12px; display: inline-block; margin: 20px 0; border: 2px solid #e2e8f0;">
+                                <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #dc2626;">${code}</span>
+                            </div>
+                            <p style="color: #94a3b8; font-size: 12px;">Il codice scade tra 10 minuti. Se non hai richiesto questo reset, ignora questa email.</p>
+                        </div>
+                    </body>
+                    </html>
+                `
+            })
+        });
+        
+        const data = await response.json();
+        if (!response.ok) {
+            console.error('[Password Reset] Brevo API error:', JSON.stringify(data));
+            return { success: false, error: data, code };
+        }
+        console.log('[Password Reset] Email sent successfully via Brevo:', data.messageId);
+        return { success: true, id: data.messageId };
+    } catch (err) {
+        console.error('[Password Reset] Fetch error:', err.message);
+        return { success: false, error: { message: err.message }, code };
+    }
+}
+
 app.post('/api/auth/register', async (req, res) => {
     const user = req.body;
     const normalizedId = (user.id || '').toLowerCase().trim();
