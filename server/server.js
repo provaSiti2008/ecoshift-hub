@@ -6,6 +6,84 @@ const { isPostgres } = require('./database');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Coordinate stazioni Milano (per calcolo distanza reale)
+const MILAN_COORDS = {
+    'Campus Bovisa': [45.5031, 9.1558],
+    'Bovisa': [45.5031, 9.1558],
+    'Stazione Centrale': [45.4851, 9.2047],
+    'Centrale': [45.4851, 9.2047],
+    'Milano Centrale': [45.4851, 9.2047],
+    'Piazza Leonardo': [45.4781, 9.2272],
+    'Leonardo': [45.4781, 9.2272],
+    'Città Studi': [45.4750, 9.2250],
+    'Citta Studi': [45.4750, 9.2250],
+    'Duomo': [45.4642, 9.1900],
+    'Sesto San Giovanni': [45.5332, 9.2319],
+    'Sesto': [45.5332, 9.2319],
+    'Rho Fiera': [45.5186, 9.0494],
+    'Rho': [45.5186, 9.0494],
+    'San Donato': [45.4190, 9.2730],
+    'Porta Genova': [45.4526, 9.1712],
+    'Cadorna FN': [45.4685, 9.1764],
+    'Cadorna': [45.4685, 9.1764],
+    'Garibaldi FS': [45.4840, 9.1880],
+    'Garibaldi': [45.4840, 9.1880],
+    'Romolo': [45.4435, 9.1668],
+    'Bicocca': [45.5140, 9.2120],
+    'Lambrate': [45.4840, 9.2340],
+    'Porta Venezia': [45.4720, 9.2040],
+    'Repubblica': [45.4760, 9.2010],
+    'Loreto': [45.4860, 9.2100],
+    'Lampugnano': [45.5180, 9.1480],
+    'Molino Dorino': [45.5080, 9.1280],
+};
+
+const LOCATION_SYNONYMS = {
+    'Milano Centrale': 'Stazione Centrale',
+    'Centrale': 'Stazione Centrale',
+    'Cadorna FN': 'Cadorna',
+    'Citta Studi': 'Città Studi',
+    'Leonardo': 'Piazza Leonardo',
+    'Sesto': 'Sesto San Giovanni',
+    'Rho': 'Rho Fiera',
+    'Bovisa': 'Campus Bovisa',
+    'Garibaldi FS': 'Garibaldi',
+};
+
+function normalizeLocation(name) {
+    if (!name) return name;
+    return LOCATION_SYNONYMS[name] || name;
+}
+
+// Calcola distanza in km tra due coordinate usando formula di Haversine
+function haversineDistance(coord1, coord2) {
+    const R = 6371; // Raggio Terra in km
+    const lat1 = coord1[0] * Math.PI / 180;
+    const lat2 = coord2[0] * Math.PI / 180;
+    const deltaLat = (coord2[0] - coord1[0]) * Math.PI / 180;
+    const deltaLon = (coord2[1] - coord1[1]) * Math.PI / 180;
+
+    const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+              Math.cos(lat1) * Math.cos(lat2) *
+              Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+// Calcola distanza reale tra due località
+function getRealDistance(from, to) {
+    const fromNorm = normalizeLocation(from);
+    const toNorm = normalizeLocation(to);
+    const fromCoords = MILAN_COORDS[fromNorm];
+    const toCoords = MILAN_COORDS[toNorm];
+
+    if (fromCoords && toCoords) {
+        return haversineDistance(fromCoords, toCoords);
+    }
+    // Se località non trovata, restituisci distanza stimata
+    return null;
+}
+
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 
 function generateOTP() {
@@ -974,7 +1052,7 @@ app.get('/api/trips/:tripId/participants', async (req, res) => {
 
 // --- User Trips Stats (for Profile) ---
 
-// GET /api/users/:id/trips-stats - Get aggregated trip statistics for a user (ALL trips)
+// GET /api/users/:id/trips-stats - Get aggregated trip statistics for a user (ALL trips with REAL distances)
 app.get('/api/users/:id/trips-stats', async (req, res) => {
     const userId = req.params.id;
     
@@ -996,16 +1074,26 @@ app.get('/api/users/:id/trips-stats', async (req, res) => {
             const isDriver = trip.driverId === userId;
             const isPassenger = passengerIds.includes(userId);
             
-            if (isDriver) {
-                totalAsDriver++;
-                totalCo2Saved += (trip.co2Saved || 0);
-                totalDistanceKm += (trip.distanceKm || 0);
-            } else if (isPassenger) {
-                totalAsPassenger++;
-                const passengerCount = passengerIds.length;
-                if (passengerCount > 0) {
-                    totalCo2Saved += ((trip.co2Saved || 0) / passengerCount);
-                    totalDistanceKm += ((trip.distanceKm || 0) / passengerCount);
+            if (isDriver || isPassenger) {
+                // Calcola distanza REALE usando coordinate
+                const realDistance = getRealDistance(trip.fromLoc, trip.toLoc);
+                
+                // Usa distanza reale se disponibile, altrimenti usa quella salvata
+                const distanceKm = realDistance !== null ? realDistance : (trip.distanceKm || 0);
+                // Calcola CO2 reale: 0.21 kg CO2 per km per auto media (1.3 L/100km)
+                const co2Saved = distanceKm * 0.21;
+                
+                if (isDriver) {
+                    totalAsDriver++;
+                    totalCo2Saved += co2Saved;
+                    totalDistanceKm += distanceKm;
+                } else if (isPassenger) {
+                    totalAsPassenger++;
+                    const passengerCount = passengerIds.length;
+                    if (passengerCount > 0) {
+                        totalCo2Saved += (co2Saved / passengerCount);
+                        totalDistanceKm += (distanceKm / passengerCount);
+                    }
                 }
             }
         }
@@ -1022,7 +1110,7 @@ app.get('/api/users/:id/trips-stats', async (req, res) => {
     }
 });
 
-// GET /api/users/:id/completed-trips - Get list of trips for a user (ALL trips)
+// GET /api/users/:id/completed-trips - Get list of trips for a user (ALL trips with REAL distances)
 app.get('/api/users/:id/completed-trips', async (req, res) => {
     const userId = req.params.id;
     const limit = parseInt(req.query.limit) || 20;
@@ -1044,10 +1132,17 @@ app.get('/api/users/:id/completed-trips', async (req, res) => {
             const isPassenger = passengerIds.includes(userId);
             
             if (isDriver || isPassenger) {
+                // Calcola distanza e CO2 REALI
+                const realDistance = getRealDistance(trip.fromLoc, trip.toLoc);
+                const distanceKm = realDistance !== null ? realDistance : (trip.distanceKm || 0);
+                const co2Saved = distanceKm * 0.21;
+                
                 userTrips.push({
                     ...trip,
                     from: trip.fromLoc,
                     to: trip.toLoc,
+                    distanceKm: Math.round(distanceKm * 100) / 100,
+                    co2Saved: Math.round(co2Saved * 100) / 100,
                     role: isDriver ? 'driver' : 'passenger'
                 });
             }
