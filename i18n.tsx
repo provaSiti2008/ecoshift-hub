@@ -170,6 +170,16 @@ confirm_reset: string;
     you_were_passenger: string;
     trip: string;
 
+    // Trips History
+    my_trips_history: string;
+    as_driver: string;
+    as_passenger: string;
+    total_distance: string;
+    co2_saved: string;
+    no_completed_trips: string;
+    km: string;
+    load_more: string;
+
     // OfferRideModal
     propose_trip_header: string;
     propose_trip_subtitle: string;
@@ -373,6 +383,16 @@ export const translations: Record<Language, Translations> = {
         you_were_driver: 'Eri il driver',
         you_were_passenger: 'Eri passeggero',
         trip: 'Viaggio',
+
+        // Trips History
+        my_trips_history: 'Il mio storico viaggi',
+        as_driver: 'Come driver',
+        as_passenger: 'Come passeggero',
+        total_distance: 'Distanza totale',
+        co2_saved: 'CO2 risparmiata',
+        no_completed_trips: 'Nessun viaggio completato',
+        km: 'km',
+        load_more: 'Carica altri',
 
         propose_trip_header: 'Proponi un Viaggio',
         propose_trip_subtitle: 'Aiuta la community e guadagna Eco-Credits (+50💎)',
@@ -609,6 +629,16 @@ participation_cancelled: 'Participation cancelled.',
         you_were_passenger: 'You were passenger',
         trip: 'Trip',
 
+        // Trips History
+        my_trips_history: 'My Trips History',
+        as_driver: 'As driver',
+        as_passenger: 'As passenger',
+        total_distance: 'Total distance',
+        co2_saved: 'CO2 saved',
+        no_completed_trips: 'No completed trips',
+        km: 'km',
+        load_more: 'Load more',
+
         footer_about: 'About',
         footer_privacy: 'Privacy',
         footer_terms: 'Terms',
@@ -805,6 +835,16 @@ participation_cancelled: 'Participación cancelada.',
         you_were_driver: 'Eras el conductor',
         you_were_passenger: 'Eras pasajero',
         trip: 'Viaje',
+
+        // Trips History
+        my_trips_history: 'Mi historial de viajes',
+        as_driver: 'Como conductor',
+        as_passenger: 'Como pasajero',
+        total_distance: 'Distancia total',
+        co2_saved: 'CO2 ahorrada',
+        no_completed_trips: 'Sin viajes completados',
+        km: 'km',
+        load_more: 'Cargar más',
 
         footer_about: 'Quiénes somos',
         footer_privacy: 'Privacidad',
@@ -1003,6 +1043,16 @@ participation_cancelled: 'Participation annulée.',
         you_were_passenger: 'Vous étiez passager',
         trip: 'Trajet',
 
+        // Trips History
+        my_trips_history: 'Mon historique de voyages',
+        as_driver: 'Comme conducteur',
+        as_passenger: 'Comme passager',
+        total_distance: 'Distance totale',
+        co2_saved: 'CO2 économisée',
+        no_completed_trips: 'Aucun voyage terminé',
+        km: 'km',
+        load_more: 'Charger plus',
+
         footer_about: 'À propos',
         footer_privacy: 'Confidentialité',
         footer_terms: 'Conditions',
@@ -1200,6 +1250,16 @@ participation_cancelled: 'Teilnahme storniert.',
         you_were_passenger: 'Sie waren Passagier',
         trip: 'Fahrt',
 
+        // Trips History
+        my_trips_history: 'Meine Fahrtenhistorie',
+        as_driver: 'Als Fahrer',
+        as_passenger: 'Als Passagier',
+        total_distance: 'Gesamtstrecke',
+        co2_saved: 'CO2 gespart',
+        no_completed_trips: 'Keine abgeschlossenen Fahrten',
+        km: 'km',
+        load_more: 'Mehr laden',
+
         footer_about: 'Über uns',
         footer_privacy: 'Datenschutz',
         footer_terms: 'AGB',
@@ -1396,6 +1456,16 @@ participation_cancelled: 'Deelname geannuleerd.',
         you_were_driver: 'Je was de chauffeur',
         you_were_passenger: 'Je was passagier',
         trip: 'Reis',
+
+        // Trips History
+        my_trips_history: 'Mijn reisgeschiedenis',
+        as_driver: 'Als chauffeur',
+        as_passenger: 'Als passagier',
+        total_distance: 'Totale afstand',
+        co2_saved: 'CO2 bespaard',
+        no_completed_trips: 'Geen voltooide reizen',
+        km: 'km',
+        load_more: 'Meer laden',
 
         footer_about: 'Over ons',
         footer_privacy: 'Privacy',

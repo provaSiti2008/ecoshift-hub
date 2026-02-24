@@ -98,3 +98,29 @@ export interface UserRating {
   rating: number | null;
   totalReviews: number;
 }
+
+export interface TripsStats {
+  totalAsDriver: number;
+  totalAsPassenger: number;
+  totalCo2Saved: number;
+  totalDistanceKm: number;
+}
+
+export interface CompletedTrip {
+  id: string;
+  driverId: string;
+  driverName: string;
+  from: string;
+  to: string;
+  departureTime: string;
+  seatsAvailable: number;
+  distanceKm: number;
+  co2Saved: number;
+  role: 'driver' | 'passenger';
+}
+
+export interface CompletedTripsResponse {
+  trips: CompletedTrip[];
+  total: number;
+  hasMore: boolean;
+}

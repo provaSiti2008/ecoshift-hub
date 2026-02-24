@@ -972,6 +972,102 @@ app.get('/api/trips/:tripId/participants', async (req, res) => {
     }
 });
 
+// --- User Trips Stats (for Profile) ---
+
+// GET /api/users/:id/trips-stats - Get aggregated trip statistics for a user
+app.get('/api/users/:id/trips-stats', async (req, res) => {
+    const userId = req.params.id;
+    const now = new Date().toISOString();
+    
+    try {
+        // Get all completed trips where user is driver OR passenger
+        const tripsSql = isPostgres
+            ? 'SELECT * FROM trips WHERE "departureTime" < ?'
+            : 'SELECT * FROM trips WHERE departureTime < ?';
+        const allTrips = await db.query(tripsSql, [now]);
+        
+        let totalAsDriver = 0;
+        let totalAsPassenger = 0;
+        let totalCo2Saved = 0;
+        let totalDistanceKm = 0;
+        
+        for (const trip of allTrips) {
+            const passengerIds = JSON.parse(trip.passengerIds || '[]');
+            const isDriver = trip.driverId === userId;
+            const isPassenger = passengerIds.includes(userId);
+            
+            if (isDriver) {
+                totalAsDriver++;
+                totalCo2Saved += (trip.co2Saved || 0);
+                totalDistanceKm += (trip.distanceKm || 0);
+            } else if (isPassenger) {
+                totalAsPassenger++;
+                // For passengers, calculate proportional CO2 and distance based on share
+                const passengerCount = passengerIds.length;
+                if (passengerCount > 0) {
+                    totalCo2Saved += ((trip.co2Saved || 0) / passengerCount);
+                    totalDistanceKm += ((trip.distanceKm || 0) / passengerCount);
+                }
+            }
+        }
+        
+        res.json({
+            totalAsDriver,
+            totalAsPassenger,
+            totalCo2Saved: Math.round(totalCo2Saved * 100) / 100,
+            totalDistanceKm: Math.round(totalDistanceKm * 100) / 100
+        });
+    } catch (err) {
+        console.error('[Trips Stats] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET /api/users/:id/completed-trips - Get list of completed trips for a user
+app.get('/api/users/:id/completed-trips', async (req, res) => {
+    const userId = req.params.id;
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = parseInt(req.query.offset) || 0;
+    const now = new Date().toISOString();
+    
+    try {
+        // Get all completed trips where user is driver OR passenger
+        const tripsSql = isPostgres
+            ? 'SELECT * FROM trips WHERE "departureTime" < ? ORDER BY "departureTime" DESC'
+            : 'SELECT * FROM trips WHERE departureTime < ? ORDER BY departureTime DESC';
+        const allTrips = await db.query(tripsSql, [now]);
+        
+        // Filter trips where user participated
+        const userTrips = [];
+        for (const trip of allTrips) {
+            const passengerIds = JSON.parse(trip.passengerIds || '[]');
+            const isDriver = trip.driverId === userId;
+            const isPassenger = passengerIds.includes(userId);
+            
+            if (isDriver || isPassenger) {
+                userTrips.push({
+                    ...trip,
+                    from: trip.fromLoc,
+                    to: trip.toLoc,
+                    role: isDriver ? 'driver' : 'passenger'
+                });
+            }
+        }
+        
+        // Apply pagination
+        const paginatedTrips = userTrips.slice(offset, offset + limit);
+        
+        res.json({
+            trips: paginatedTrips,
+            total: userTrips.length,
+            hasMore: offset + limit < userTrips.length
+        });
+    } catch (err) {
+        console.error('[Completed Trips] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 
 module.exports = app;
 

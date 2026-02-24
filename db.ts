@@ -1,4 +1,4 @@
-import { User, Trip, CreditLog, Message, Notification, StudyGroup, Review, UserRating } from './types';
+import { User, Trip, CreditLog, Message, Notification, StudyGroup, Review, UserRating, TripsStats, CompletedTrip, CompletedTripsResponse } from './types';
 import { normalizeLocation } from './constants';
 
 const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3000/api';
@@ -443,6 +443,39 @@ async getRealTimeDepartures(stationId: string, time?: Date): Promise<any[]> {
     } catch (err) {
       console.error('Error fetching user rating:', err);
       return { rating: null, totalReviews: 0 };
+    }
+  }
+
+  async getUserTripsStats(userId: string): Promise<TripsStats> {
+    try {
+      const res = await fetch(`${API_URL}/users/${userId}/trips-stats`);
+      if (!res.ok) return { totalAsDriver: 0, totalAsPassenger: 0, totalCo2Saved: 0, totalDistanceKm: 0 };
+      const data = await res.json();
+      return {
+        totalAsDriver: data.totalAsDriver || 0,
+        totalAsPassenger: data.totalAsPassenger || 0,
+        totalCo2Saved: data.totalCo2Saved || 0,
+        totalDistanceKm: data.totalDistanceKm || 0
+      };
+    } catch (err) {
+      console.error('Error fetching user trips stats:', err);
+      return { totalAsDriver: 0, totalAsPassenger: 0, totalCo2Saved: 0, totalDistanceKm: 0 };
+    }
+  }
+
+  async getCompletedTrips(userId: string, limit = 20, offset = 0): Promise<CompletedTripsResponse> {
+    try {
+      const res = await fetch(`${API_URL}/users/${userId}/completed-trips?limit=${limit}&offset=${offset}`);
+      if (!res.ok) return { trips: [], total: 0, hasMore: false };
+      const data = await res.json();
+      return {
+        trips: data.trips || [],
+        total: data.total || 0,
+        hasMore: data.hasMore || false
+      };
+    } catch (err) {
+      console.error('Error fetching completed trips:', err);
+      return { trips: [], total: 0, hasMore: false };
     }
   }
 }

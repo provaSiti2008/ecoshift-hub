@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { db } from '../db';
-import { User, UserRole, Review } from '../types';
+import { User, UserRole, Review, TripsStats, CompletedTrip } from '../types';
 import { useLanguage } from '../i18n';
 
 interface ProfileModalProps {
@@ -25,6 +25,14 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
   const [reviews, setReviews] = useState<Review[]>([]);
   const [userRating, setUserRating] = useState<{ rating: number | null; totalReviews: number }>({ rating: null, totalReviews: 0 });
   const [showReviews, setShowReviews] = useState(false);
+  
+  // Trips History states
+  const [tripsStats, setTripsStats] = useState<TripsStats>({ totalAsDriver: 0, totalAsPassenger: 0, totalCo2Saved: 0, totalDistanceKm: 0 });
+  const [completedTrips, setCompletedTrips] = useState<CompletedTrip[]>([]);
+  const [tripsLoading, setTripsLoading] = useState(false);
+  const [hasMoreTrips, setHasMoreTrips] = useState(false);
+  const [tripsOffset, setTripsOffset] = useState(0);
+  const [showTripsHistory, setShowTripsHistory] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -35,6 +43,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
         accessibilityNeeds: user.accessibilityNeeds || [],
       });
       loadReviews();
+      loadTripsStats();
+      loadCompletedTrips(0, false);
     }
   }, [isOpen, user]);
 
@@ -49,6 +59,38 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
     } catch (err) {
       console.error('Error loading reviews:', err);
     }
+  };
+
+  const loadTripsStats = async () => {
+    try {
+      const stats = await db.getUserTripsStats(user.id);
+      setTripsStats(stats);
+    } catch (err) {
+      console.error('Error loading trips stats:', err);
+    }
+  };
+
+  const loadCompletedTrips = async (offset = 0, append = false) => {
+    if (tripsLoading) return;
+    setTripsLoading(true);
+    try {
+      const result = await db.getCompletedTrips(user.id, 20, offset);
+      if (append) {
+        setCompletedTrips(prev => [...prev, ...result.trips]);
+      } else {
+        setCompletedTrips(result.trips);
+      }
+      setHasMoreTrips(result.hasMore);
+      setTripsOffset(offset);
+    } catch (err) {
+      console.error('Error loading completed trips:', err);
+    } finally {
+      setTripsLoading(false);
+    }
+  };
+
+  const loadMoreTrips = () => {
+    loadCompletedTrips(tripsOffset + 20, true);
   };
 
   const renderStars = (rating: number) => {
@@ -242,6 +284,109 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
                       )}
                     </div>
                   ))
+                )}
+              </div>
+            )}
+          </section>
+
+          {/* Trips History Section */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{t.my_trips_history}</h3>
+              {completedTrips.length > 0 && (
+                <button
+                  onClick={() => setShowTripsHistory(!showTripsHistory)}
+                  className="text-xs font-bold text-brand-600 hover:text-brand-700"
+                >
+                  {showTripsHistory ? 'Nascondi' : 'Mostra'}
+                </button>
+              )}
+            </div>
+
+            {/* Stats Cards Grid 2x2 */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* As Driver - Brand */}
+              <div className="bg-brand-50 dark:bg-brand-900/30 border border-brand-100 dark:border-brand-800 rounded-2xl p-4">
+                <div className="text-2xl font-black text-brand-600 dark:text-brand-400">
+                  {tripsStats.totalAsDriver}
+                </div>
+                <div className="text-xs font-bold text-brand-700 dark:text-brand-300 mt-1">
+                  {t.as_driver}
+                </div>
+              </div>
+
+              {/* As Passenger - Emerald */}
+              <div className="bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800 rounded-2xl p-4">
+                <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                  {tripsStats.totalAsPassenger}
+                </div>
+                <div className="text-xs font-bold text-emerald-700 dark:text-emerald-300 mt-1">
+                  {t.as_passenger}
+                </div>
+              </div>
+
+              {/* CO2 Saved - Amber */}
+              <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-100 dark:border-amber-800 rounded-2xl p-4">
+                <div className="text-2xl font-black text-amber-600 dark:text-amber-400">
+                  {tripsStats.totalCo2Saved.toFixed(1)}
+                </div>
+                <div className="text-xs font-bold text-amber-700 dark:text-amber-300 mt-1">
+                  {t.co2_saved} (kg)
+                </div>
+              </div>
+
+              {/* Total Distance - Violet */}
+              <div className="bg-violet-50 dark:bg-violet-900/30 border border-violet-100 dark:border-violet-800 rounded-2xl p-4">
+                <div className="text-2xl font-black text-violet-600 dark:text-violet-400">
+                  {tripsStats.totalDistanceKm.toFixed(1)}
+                </div>
+                <div className="text-xs font-bold text-violet-700 dark:text-violet-300 mt-1">
+                  {t.total_distance} ({t.km})
+                </div>
+              </div>
+            </div>
+
+            {/* Completed Trips List */}
+            {showTripsHistory && (
+              <div className="space-y-2 max-h-80 overflow-y-auto animate-fade-in">
+                {completedTrips.length === 0 ? (
+                  <p className="text-sm text-slate-400 text-center py-4">{t.no_completed_trips}</p>
+                ) : (
+                  completedTrips.map(trip => (
+                    <div 
+                      key={trip.id} 
+                      className="bg-white dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-xl p-3 flex items-center justify-between"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
+                          <span>{new Date(trip.departureTime).toLocaleDateString()}</span>
+                        </div>
+                        <div className="text-sm font-bold text-slate-800 dark:text-white truncate">
+                          {trip.from} → {trip.to}
+                        </div>
+                      </div>
+                      <div className="ml-3 flex-shrink-0">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${
+                          trip.role === 'driver' 
+                            ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/50 dark:text-brand-300' 
+                            : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300'
+                        }`}>
+                          {trip.role === 'driver' ? t.as_driver : t.as_passenger}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+                
+                {/* Load More Button */}
+                {hasMoreTrips && (
+                  <button
+                    onClick={loadMoreTrips}
+                    disabled={tripsLoading}
+                    className="w-full py-3 text-sm font-bold text-brand-600 hover:text-brand-700 disabled:opacity-50"
+                  >
+                    {tripsLoading ? t.loading : t.load_more}
+                  </button>
                 )}
               </div>
             )}
