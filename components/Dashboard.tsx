@@ -13,6 +13,7 @@ import { MapView } from './MapView';
 import { TrainStudySection } from './TrainStudySection';
 import { Notification } from '../types';
 import { MOCK_DRIVER_IDS } from '../constants';
+import { ReviewModal } from './ReviewModal';
 
 const AsyncNotificationBadge = ({ userId }: { userId: string }) => {
   const [hasUnread, setHasUnread] = useState(false);
@@ -92,9 +93,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalO
   const [activeTab, setActiveTab] = useState<'all' | 'mine' | 'trains'>('all');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
-  const [searchQuery, setSearchQuery] = useState<string>('');
+const [searchQuery, setSearchQuery] = useState<string>('');
   const [subjectFilter, setSubjectFilter] = useState<string>('all');
   const [accessibilityOnly, setAccessibilityOnly] = useState<boolean>(false);
+  const [completedTrips, setCompletedTrips] = useState<Trip[]>([]);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [selectedReviewTrip, setSelectedReviewTrip] = useState<Trip | null>(null);
 
   // Listener per la sincronizzazione del database
   useEffect(() => {
@@ -107,7 +111,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalO
     return () => window.removeEventListener('ecoshift-sync', handleSync);
   }, []);
 
-  const loadData = async () => {
+const loadData = async () => {
     const [allTrips, allGroups] = await Promise.all([
       db.getTrips(),
       db.getStudyGroups()
@@ -117,6 +121,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalO
     const realTrips = allTrips
       .filter(t => !MOCK_DRIVER_IDS.includes(t.driverId))
       .filter(t => new Date(t.departureTime) >= now); // Nasconde viaggi scaduti
+
+    // Completed trips where current user was driver or passenger
+    const pastTrips = allTrips
+      .filter(t => !MOCK_DRIVER_IDS.includes(t.driverId))
+      .filter(t => new Date(t.departureTime) < now) // Solo viaggi passati
+      .filter(t => t.driverId === currentUser.id || (t.passengerIds && t.passengerIds.includes(currentUser.id))); // Solo se partecipante
+    
+    const completedSorted = pastTrips.sort((a, b) => new Date(b.departureTime).getTime() - new Date(a.departureTime).getTime());
 
     // Filtro per gruppi di studio: rimuove demo e gestisce formato orario (HH:MM)
     const realGroups = allGroups
@@ -134,6 +146,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalO
       });
     const sortedTrips = realTrips.sort((a, b) => new Date(a.departureTime).getTime() - new Date(b.departureTime).getTime());
     setTrips(sortedTrips);
+    setCompletedTrips(completedSorted);
     setStudyGroups(realGroups);
     setLastSync(new Date());
   };
@@ -283,13 +296,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalO
 
   return (
     <main className="max-w-7xl mx-auto p-4 md:p-6 space-y-8 animate-fade-in relative z-10">
-      <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+<HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
       <OfferRideModal
         isOpen={isOfferModalOpen}
         onClose={() => setIsOfferModalOpen(false)}
         currentUser={currentUser}
         onTripCreated={loadData}
         onUserUpdate={onUserUpdate}
+      />
+      <ReviewModal
+        isOpen={reviewModalOpen}
+        onClose={() => { setReviewModalOpen(false); setSelectedReviewTrip(null); }}
+        trip={selectedReviewTrip!}
+        currentUser={currentUser}
+        onReviewSubmitted={() => { loadData(); }}
       />
 
       {/* Toast Notifications - Fixed on top of everything */}
@@ -486,7 +506,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalO
                   userLocation={userLocation}
                 />
               </div>
-            ) : filteredTrips.length > 0 || (activeTab === 'trains') ? (
+) : filteredTrips.length > 0 || (activeTab === 'trains') ? (
               <div className="grid grid-cols-1 gap-4">
                 {filteredTrips.map((trip) => (
                   <div key={trip.id} className="transform transition-all hover:scale-[1.01]">
@@ -496,9 +516,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalO
                       onQuickBook={handleQuickBook}
                       onCancelParticipation={handleCancelParticipation}
                       onCancelTrip={handleCancelTrip}
-                    // Pass styling prop if TripCard supports it, or rely on global CSS override 
-                    // Actually TripCard needs to be updated too for full glassmorphism, 
-                    // but wrapping it here might be enough for layout.
                     />
                   </div>
                 ))}
@@ -513,6 +530,37 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalO
                 >
                   {t.reset_filters}
                 </button>
+</div>
+            )}
+
+            {/* Completed Trips Section - Only show for 'mine' tab */}
+            {activeTab === 'mine' && completedTrips.length > 0 && (
+              <div className="mt-8 pt-8 border-t border-slate-200 dark:border-slate-700">
+                <h2 className="text-xl font-black tracking-tight text-slate-800 dark:text-white flex items-center gap-3 mb-4">
+                  <span>⭐</span> {t.completed_trips || 'Viaggi Completati'}
+                  <span className="bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 text-xs px-2.5 py-1 rounded-full font-bold">{completedTrips.length}</span>
+                </h2>
+                <div className="grid grid-cols-1 gap-3">
+                  {completedTrips.slice(0, 10).map((trip) => (
+                    <div key={trip.id} className="glass-panel p-4 rounded-2xl flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="font-bold text-slate-800 dark:text-white text-sm">
+                          {trip.from} → {trip.to}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {new Date(trip.departureTime).toLocaleDateString()} • 
+                          {trip.driverId === currentUser.id ? (t.you_were_driver || 'Eri il driver') : (t.you_were_passenger || 'Eri passeggero')}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => { setSelectedReviewTrip(trip); setReviewModalOpen(true); }}
+                        className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all"
+                      >
+                        ⭐ {t.leave_review || 'Recensione'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

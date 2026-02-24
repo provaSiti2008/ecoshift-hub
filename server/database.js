@@ -227,6 +227,65 @@ async function initDb() {
     // Table already exists
   }
 
+  // Migration: Create reviews table
+  try {
+    await query(`CREATE TABLE IF NOT EXISTS reviews (
+      id TEXT PRIMARY KEY,
+      tripId TEXT,
+      reviewerId TEXT,
+      reviewerName TEXT,
+      reviewedId TEXT,
+      reviewedName TEXT,
+      type TEXT,
+      rating INTEGER,
+      comment TEXT,
+      createdAt TEXT
+    )`);
+    console.log('Migration: Created reviews table');
+  } catch (e) {
+    // Table already exists - try to add missing columns
+    try {
+      if (isPostgres) {
+        await query(`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS "tripId" TEXT`);
+        await query(`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS "reviewerId" TEXT`);
+        await query(`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS "reviewerName" TEXT`);
+        await query(`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS "reviewedId" TEXT`);
+        await query(`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS "reviewedName" TEXT`);
+        await query(`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS type TEXT`);
+        await query(`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS rating INTEGER`);
+        await query(`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS comment TEXT`);
+        await query(`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS "createdAt" TEXT`);
+      } else {
+        await query(`ALTER TABLE reviews ADD COLUMN tripId TEXT`);
+        await query(`ALTER TABLE reviews ADD COLUMN reviewerId TEXT`);
+        await query(`ALTER TABLE reviews ADD COLUMN reviewerName TEXT`);
+        await query(`ALTER TABLE reviews ADD COLUMN reviewedId TEXT`);
+        await query(`ALTER TABLE reviews ADD COLUMN reviewedName TEXT`);
+        await query(`ALTER TABLE reviews ADD COLUMN type TEXT`);
+        await query(`ALTER TABLE reviews ADD COLUMN rating INTEGER`);
+        await query(`ALTER TABLE reviews ADD COLUMN comment TEXT`);
+        await query(`ALTER TABLE reviews ADD COLUMN createdAt TEXT`);
+      }
+      console.log('Migration: Added missing columns to reviews table');
+    } catch (e2) {
+      // Columns already exist
+    }
+  }
+
+  // Migration: Add rating and totalReviews columns to users if missing
+  try {
+    if (isPostgres) {
+      await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS rating REAL`);
+      await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS "totalReviews" INTEGER`);
+    } else {
+      await query(`ALTER TABLE users ADD COLUMN rating REAL`);
+      await query(`ALTER TABLE users ADD COLUMN totalReviews INTEGER`);
+    }
+    console.log('Migration: Added rating and totalReviews columns to users table');
+  } catch (e) {
+    // Columns already exist
+  }
+
   console.log('Database tables initialized.');
 }
 

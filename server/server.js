@@ -796,6 +796,182 @@ app.delete('/api/study-groups/:id', async (req, res) => {
     }
 });
 
+// --- Reviews ---
+
+// GET /api/reviews/:userId - Get reviews received by user
+app.get('/api/reviews/:userId', async (req, res) => {
+    try {
+        const sql = isPostgres
+            ? 'SELECT * FROM reviews WHERE "reviewedId" = ? ORDER BY "createdAt" DESC'
+            : 'SELECT * FROM reviews WHERE reviewedId = ? ORDER BY createdAt DESC';
+        const rows = await db.query(sql, [req.params.userId]);
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET /api/users/:id/rating - Get user rating stats
+app.get('/api/users/:id/rating', async (req, res) => {
+    try {
+        const sql = isPostgres
+            ? 'SELECT rating, "totalReviews" FROM users WHERE id = ?'
+            : 'SELECT rating, totalReviews FROM users WHERE id = ?';
+        const rows = await db.query(sql, [req.params.id]);
+        
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        res.json({
+            rating: rows[0].rating || null,
+            totalReviews: rows[0].totalReviews || 0
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// POST /api/reviews - Create new review
+app.post('/api/reviews', async (req, res) => {
+    const { tripId, reviewerId, reviewerName, reviewedId, reviewedName, type, rating, comment } = req.body;
+    
+    // Validation
+    if (!tripId || !reviewerId || !reviewedId || !type || !rating) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    if (rating < 1 || rating > 5) {
+        return res.status(400).json({ error: 'Rating must be between 1 and 5' });
+    }
+    
+    if (comment && comment.length > 0 && comment.length < 5) {
+        return res.status(400).json({ error: 'Comment must be at least 5 characters' });
+    }
+    
+    try {
+        // Check if user already reviewed this trip
+        const checkSql = isPostgres
+            ? 'SELECT id FROM reviews WHERE "tripId" = ? AND "reviewerId" = ?'
+            : 'SELECT id FROM reviews WHERE tripId = ? AND reviewerId = ?';
+        const existing = await db.query(checkSql, [tripId, reviewerId]);
+        
+        if (existing.length > 0) {
+            return res.status(409).json({ error: 'ALREADY_REVIEWED' });
+        }
+        
+        // Verify user participated in the trip
+        const tripSql = isPostgres
+            ? 'SELECT * FROM trips WHERE id = ?'
+            : 'SELECT * FROM trips WHERE id = ?';
+        const trips = await db.query(tripSql, [tripId]);
+        
+        if (trips.length === 0) {
+            return res.status(404).json({ error: 'Trip not found' });
+        }
+        
+        const trip = trips[0];
+        const passengerIds = JSON.parse(trip.passengerIds || '[]');
+        
+        // Check if reviewer is driver or passenger of this trip
+        const isDriver = trip.driverId === reviewerId;
+        const isPassenger = passengerIds.includes(reviewerId);
+        
+        if (!isDriver && !isPassenger) {
+            return res.status(403).json({ error: 'NOT_PARTICIPANT' });
+        }
+        
+        // Check if reviewed user is the other party
+        const isReviewingDriver = type === 'passenger_to_driver';
+        const isReviewingPassenger = type === 'driver_to_passenger';
+        
+        if (isReviewingDriver && trip.driverId !== reviewedId) {
+            return res.status(400).json({ error: 'INVALID_REVIEWEE' });
+        }
+        
+        if (isReviewingPassenger && !passengerIds.includes(reviewedId)) {
+            return res.status(400).json({ error: 'INVALID_REVIEWEE' });
+        }
+        
+        // Create the review
+        const id = crypto.randomUUID();
+        const createdAt = new Date().toISOString();
+        
+        const insertSql = isPostgres
+            ? `INSERT INTO reviews (id, "tripId", "reviewerId", "reviewerName", "reviewedId", "reviewedName", type, rating, comment, "createdAt") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+            : `INSERT INTO reviews (id, tripId, reviewerId, reviewerName, reviewedId, reviewedName, type, rating, comment, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        
+        await db.query(insertSql, [id, tripId, reviewerId, reviewerName, reviewedId, reviewedName, type, rating, comment || null, createdAt]);
+        
+        // Update user's rating average
+        const statsSql = isPostgres
+            ? 'SELECT AVG(rating) as avgRating, COUNT(*) as count FROM reviews WHERE "reviewedId" = ?'
+            : 'SELECT AVG(rating) as avgRating, COUNT(*) as count FROM reviews WHERE reviewedId = ?';
+        const stats = await db.query(statsSql, [reviewedId]);
+        
+        const newRating = stats[0].avgRating;
+        const newTotalReviews = stats[0].count;
+        
+        const updateUserSql = isPostgres
+            ? `UPDATE users SET rating = ?, "totalReviews" = ? WHERE id = ?`
+            : `UPDATE users SET rating = ?, totalReviews = ? WHERE id = ?`;
+        
+        await db.query(updateUserSql, [newRating, newTotalReviews, reviewedId]);
+        
+        res.json({ 
+            message: 'Review created', 
+            id,
+            newRating,
+            newTotalReviews
+        });
+    } catch (err) {
+        console.error('[Reviews] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET /api/trips/:tripId/participants - Get trip participants (for review modal)
+app.get('/api/trips/:tripId/participants', async (req, res) => {
+    try {
+        const sql = isPostgres
+            ? 'SELECT * FROM trips WHERE id = ?'
+            : 'SELECT * FROM trips WHERE id = ?';
+        const rows = await db.query(sql, [req.params.tripId]);
+        
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Trip not found' });
+        }
+        
+        const trip = rows[0];
+        const passengerIds = JSON.parse(trip.passengerIds || '[]');
+        
+        // Get passenger details
+        const passengers = [];
+        for (const pid of passengerIds) {
+            const userSql = isPostgres
+                ? 'SELECT id, name, rating, "totalReviews" FROM users WHERE id = ?'
+                : 'SELECT id, name, rating, totalReviews FROM users WHERE id = ?';
+            const users = await db.query(userSql, [pid]);
+            if (users.length > 0) {
+                passengers.push(users[0]);
+            }
+        }
+        
+        res.json({
+            tripId: trip.id,
+            driver: {
+                id: trip.driverId,
+                name: trip.driverName,
+                rating: trip.driverRating || null,
+                totalReviews: trip.driverTotalReviews || 0
+            },
+            passengers
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 
 module.exports = app;
 

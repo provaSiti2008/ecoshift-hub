@@ -148,7 +148,27 @@ export interface Translations {
     hide_data: string;
     export_json: string;
     reset_all: string;
-    confirm_reset: string;
+confirm_reset: string;
+
+    // Reviews
+    leave_review: string;
+    review_driver: string;
+    review_passenger: string;
+    your_rating: string;
+    comment_optional: string;
+    write_comment: string;
+    submit_review: string;
+    submitting: string;
+    rating_required: string;
+    comment_too_short: string;
+    already_reviewed: string;
+    not_participant: string;
+    reviews: string;
+    no_reviews_yet: string;
+    completed_trips: string;
+    you_were_driver: string;
+    you_were_passenger: string;
+    trip: string;
 
     // OfferRideModal
     propose_trip_header: string;
@@ -333,6 +353,26 @@ export const translations: Record<Language, Translations> = {
         export_json: 'Esporta JSON',
         reset_all: 'Reset Totale',
         confirm_reset: 'Sei sicuro? Tutti i dati locali verranno eliminati.',
+
+        // Reviews
+        leave_review: 'Lascia recensione',
+        review_driver: 'Recensisci il driver',
+        review_passenger: 'Recensisci il passeggero',
+        your_rating: 'La tua valutazione',
+        comment_optional: 'Commento (opzionale)',
+        write_comment: 'Condividi la tua esperienza...',
+        submit_review: 'Invia recensione',
+        submitting: 'Invio...',
+        rating_required: 'Seleziona una valutazione',
+        comment_too_short: 'Il commento deve essere di almeno 5 caratteri',
+        already_reviewed: 'Hai già lasciato una recensione per questo viaggio',
+        not_participant: 'Non eri un partecipante a questo viaggio',
+        reviews: 'recensioni',
+        no_reviews_yet: 'Nessuna recensione ancora',
+        completed_trips: 'Viaggi Completati',
+        you_were_driver: 'Eri il driver',
+        you_were_passenger: 'Eri passeggero',
+        trip: 'Viaggio',
 
         propose_trip_header: 'Proponi un Viaggio',
         propose_trip_subtitle: 'Aiuta la community e guadagna Eco-Credits (+50💎)',
@@ -546,8 +586,28 @@ export const translations: Record<Language, Translations> = {
         cancel_notification: '{name} cancelled the booking to {to}.',
         trip_cancelled_notification: 'The trip to {to} was cancelled by the driver.',
         unknown_destination: 'Unknown destination',
-        participation_cancelled: 'Participation cancelled.',
+participation_cancelled: 'Participation cancelled.',
         commitment_removed: 'Commitment removed.',
+
+        // Reviews
+        leave_review: 'Leave review',
+        review_driver: 'Review driver',
+        review_passenger: 'Review passenger',
+        your_rating: 'Your rating',
+        comment_optional: 'Comment (optional)',
+        write_comment: 'Share your experience...',
+        submit_review: 'Submit review',
+        submitting: 'Submitting...',
+        rating_required: 'Please select a rating',
+        comment_too_short: 'Comment must be at least 5 characters',
+        already_reviewed: 'You have already reviewed this trip',
+        not_participant: 'You were not a participant in this trip',
+        reviews: 'reviews',
+        no_reviews_yet: 'No reviews yet',
+        completed_trips: 'Completed Trips',
+        you_were_driver: 'You were driver',
+        you_were_passenger: 'You were passenger',
+        trip: 'Trip',
 
         footer_about: 'About',
         footer_privacy: 'Privacy',
@@ -723,8 +783,28 @@ export const translations: Record<Language, Translations> = {
         cancel_notification: '{name} canceló la reserva para {to}.',
         trip_cancelled_notification: 'El viaje para {to} fue cancelado por el conductor.',
         unknown_destination: 'Destino desconocido',
-        participation_cancelled: 'Participación cancelada.',
+participation_cancelled: 'Participación cancelada.',
         commitment_removed: 'Compromiso eliminado.',
+
+        // Reviews
+        leave_review: 'Deja una reseña',
+        review_driver: 'Reseña al conductor',
+        review_passenger: 'Reseña al pasajeros',
+        your_rating: 'Tu valoración',
+        comment_optional: 'Comentario (opcional)',
+        write_comment: 'Comparte tu experiencia...',
+        submit_review: 'Enviar reseña',
+        submitting: 'Enviando...',
+        rating_required: 'Selecciona una valoración',
+        comment_too_short: 'El comentario debe tener al menos 5 caracteres',
+        already_reviewed: 'Ya has valorado este viaje',
+        not_participant: 'No eras participante en este viaje',
+        reviews: 'reseñas',
+        no_reviews_yet: 'Sin reseñas aún',
+        completed_trips: 'Viajes Completados',
+        you_were_driver: 'Eras el conductor',
+        you_were_passenger: 'Eras pasajero',
+        trip: 'Viaje',
 
         footer_about: 'Quiénes somos',
         footer_privacy: 'Privacidad',
@@ -900,8 +980,28 @@ export const translations: Record<Language, Translations> = {
         cancel_notification: '{name} a annulé la réservation pour {to}.',
         trip_cancelled_notification: 'Le trajet pour {to} a été annulé par le conducteur.',
         unknown_destination: 'Destination inconnue',
-        participation_cancelled: 'Participation annulée.',
+participation_cancelled: 'Participation annulée.',
         commitment_removed: 'Engagement supprimé.',
+
+        // Reviews
+        leave_review: 'Laisser un avis',
+        review_driver: 'Avis sur le conducteur',
+        review_passenger: 'Avis sur le passager',
+        your_rating: 'Votre note',
+        comment_optional: 'Commentaire (optionnel)',
+        write_comment: 'Partagez votre expérience...',
+        submit_review: 'Soumettre',
+        submitting: 'Envoi...',
+        rating_required: 'Veuillez sélectionner une note',
+        comment_too_short: 'Le commentaire doit contenir au moins 5 caractères',
+        already_reviewed: 'Vous avez déjà noté ce trajet',
+        not_participant: 'Vous n\'étiez pas participant à ce trajet',
+        reviews: 'avis',
+        no_reviews_yet: 'Pas encore d\'avis',
+        completed_trips: 'Trajets Terminés',
+        you_were_driver: 'Vous étiez le conducteur',
+        you_were_passenger: 'Vous étiez passager',
+        trip: 'Trajet',
 
         footer_about: 'À propos',
         footer_privacy: 'Confidentialité',
@@ -1077,8 +1177,28 @@ export const translations: Record<Language, Translations> = {
         cancel_notification: '{name} hat die Buchung nach {to} storniert.',
         trip_cancelled_notification: 'Die Fahrt nach {to} wurde vom Fahrer storniert.',
         unknown_destination: 'Unbekanntes Ziel',
-        participation_cancelled: 'Teilnahme storniert.',
+participation_cancelled: 'Teilnahme storniert.',
         commitment_removed: 'Zusage entfernt.',
+
+        // Reviews
+        leave_review: 'Bewertung hinterlassen',
+        review_driver: 'Fahrer bewerten',
+        review_passenger: 'Passagier bewerten',
+        your_rating: 'Ihre Bewertung',
+        comment_optional: 'Kommentar (optional)',
+        write_comment: 'Teilen Sie Ihre Erfahrung...',
+        submit_review: 'Absenden',
+        submitting: 'Wird gesendet...',
+        rating_required: 'Bitte wählen Sie eine Bewertung',
+        comment_too_short: 'Kommentar muss mindestens 5 Zeichen haben',
+        already_reviewed: 'Sie haben diese Fahrt bereits bewertet',
+        not_participant: 'Sie waren kein Teilnehmer dieser Fahrt',
+        reviews: 'Bewertungen',
+        no_reviews_yet: 'Noch keine Bewertungen',
+        completed_trips: 'Abgeschlossene Fahrten',
+        you_were_driver: 'Sie waren der Fahrer',
+        you_were_passenger: 'Sie waren Passagier',
+        trip: 'Fahrt',
 
         footer_about: 'Über uns',
         footer_privacy: 'Datenschutz',
@@ -1254,8 +1374,28 @@ export const translations: Record<Language, Translations> = {
         cancel_notification: '{name} heeft de boeking naar {to} geannuleerd.',
         trip_cancelled_notification: 'De reis naar {to} is geannuleerd door de chauffeur.',
         unknown_destination: 'Onbekende bestemming',
-        participation_cancelled: 'Deelname geannuleerd.',
+participation_cancelled: 'Deelname geannuleerd.',
         commitment_removed: 'Verbintenis verwijderd.',
+
+        // Reviews
+        leave_review: 'Review achterlaten',
+        review_driver: 'Chauffeur beoordelen',
+        review_passenger: 'Passagier beoordelen',
+        your_rating: 'Jouw beoordeling',
+        comment_optional: 'Commentaar (optioneel)',
+        write_comment: 'Deel je ervaring...',
+        submit_review: 'Verzenden',
+        submitting: 'Verzenden...',
+        rating_required: 'Selecteer een beoordeling',
+        comment_too_short: 'Commentaar moet minstens 5 tekens hebben',
+        already_reviewed: 'Je hebt deze reis al beoordeeld',
+        not_participant: 'Je was geen deelnemer aan deze reis',
+        reviews: 'reviews',
+        no_reviews_yet: 'Nog geen reviews',
+        completed_trips: 'Voltooide Reizen',
+        you_were_driver: 'Je was de chauffeur',
+        you_were_passenger: 'Je was passagier',
+        trip: 'Reis',
 
         footer_about: 'Over ons',
         footer_privacy: 'Privacy',

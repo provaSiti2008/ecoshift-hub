@@ -4,6 +4,7 @@ import { Trip, User } from '../types';
 import { TripChat } from './TripChat';
 import { db } from '../db';
 import { useLanguage } from '../i18n';
+import { UserRating } from '../types';
 
 interface TripCardProps {
   trip: Trip;
@@ -65,6 +66,35 @@ export const TripCard: React.FC<TripCardProps> = ({
   const isAvailable = trip.seatsAvailable > 0;
   const isDriver = trip.driverId === currentUser.id;
   const isPassenger = trip.passengerIds && trip.passengerIds.includes(currentUser.id);
+  const [driverRating, setDriverRating] = useState<UserRating | null>(null);
+
+  useEffect(() => {
+    const loadDriverRating = async () => {
+      try {
+        const rating = await db.getUserRating(trip.driverId);
+        setDriverRating(rating);
+      } catch (e) {
+        console.error("Error loading driver rating", e);
+      }
+    };
+    loadDriverRating();
+  }, [trip.driverId]);
+
+  const renderStars = (rating: number | null | undefined) => {
+    if (!rating) return null;
+    const stars = [];
+    const fullStars = Math.round(rating);
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <span key={i} className={i <= fullStars ? 'text-amber-400' : 'text-slate-300 dark:text-slate-600'}>
+          ★
+        </span>
+      );
+    }
+    return stars;
+  };
+
+  const hasPositiveReviews = driverRating && driverRating.totalReviews >= 3 && driverRating.rating && driverRating.rating >= 4;
 
   return (
     <article
@@ -149,12 +179,25 @@ export const TripCard: React.FC<TripCardProps> = ({
           </div>
         </div>
 
-        {/* Action Column */}
+{/* Action Column */}
         <div className="flex flex-col items-start md:items-end justify-between min-h-[140px] gap-6 w-full md:w-auto mt-4 md:mt-0 border-t md:border-t-0 pt-4 md:pt-0 border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-3">
             <div className="text-right hidden md:block">
               <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{t.driver_label}</p>
               <p className="text-sm font-bold text-slate-800 dark:text-white">{isDriver ? t.me : trip.driverName}</p>
+              {driverRating && driverRating.rating && (
+                <div className="flex items-center gap-1 mt-1">
+                  <div className="flex">{renderStars(driverRating.rating)}</div>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    ({driverRating.totalReviews})
+                  </span>
+                  {hasPositiveReviews && (
+                    <span className="ml-1 text-[10px] bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-full font-bold">
+                      ✓
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
             <div className="relative">
               <img
@@ -169,6 +212,19 @@ export const TripCard: React.FC<TripCardProps> = ({
             <div className="block md:hidden">
               <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{t.driver_label}</p>
               <p className="text-sm font-bold text-slate-800 dark:text-white">{isDriver ? t.me : trip.driverName}</p>
+              {driverRating && driverRating.rating && (
+                <div className="flex items-center gap-1 mt-1">
+                  <div className="flex">{renderStars(driverRating.rating)}</div>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    ({driverRating.totalReviews})
+                  </span>
+                  {hasPositiveReviews && (
+                    <span className="ml-1 text-[10px] bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-full font-bold">
+                      ✓
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

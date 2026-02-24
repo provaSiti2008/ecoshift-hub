@@ -14,6 +14,8 @@ export interface User {
   credits: number; // CO2 Eco-Credits
   password?: string; // Simple password storage for prototype
   theme?: 'light' | 'dark'; // Tema preferito dell'utente
+  rating?: number | null; // Average rating (1-5)
+  totalReviews?: number; // Total number of reviews
 }
 
 export interface Trip {
@@ -77,4 +79,22 @@ export interface UserLocation {
   lng: number;
   accuracy?: number;
   timestamp: number;
+}
+
+export interface Review {
+  id: string;
+  tripId: string;
+  reviewerId: string;
+  reviewerName: string;
+  reviewedId: string;
+  reviewedName: string;
+  type: 'driver_to_passenger' | 'passenger_to_driver';
+  rating: number;
+  comment?: string;
+  createdAt: string;
+}
+
+export interface UserRating {
+  rating: number | null;
+  totalReviews: number;
 }

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { db } from '../db';
-import { User, UserRole } from '../types';
+import { User, UserRole, Review } from '../types';
 import { useLanguage } from '../i18n';
 
 interface ProfileModalProps {
@@ -22,6 +22,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
   const [newSkill, setNewSkill] = useState('');
   const [newNeed, setNewNeed] = useState('');
   const [showDebug, setShowDebug] = useState(false);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [userRating, setUserRating] = useState<{ rating: number | null; totalReviews: number }>({ rating: null, totalReviews: 0 });
+  const [showReviews, setShowReviews] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -31,8 +34,34 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
         skills: user.skills,
         accessibilityNeeds: user.accessibilityNeeds || [],
       });
+      loadReviews();
     }
   }, [isOpen, user]);
+
+  const loadReviews = async () => {
+    try {
+      const [userReviews, rating] = await Promise.all([
+        db.getReviews(user.id),
+        db.getUserRating(user.id)
+      ]);
+      setReviews(userReviews);
+      setUserRating(rating);
+    } catch (err) {
+      console.error('Error loading reviews:', err);
+    }
+  };
+
+  const renderStars = (rating: number) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <span key={i} className={i <= rating ? 'text-amber-400' : 'text-slate-300 dark:text-slate-600'}>
+          ★
+        </span>
+      );
+    }
+    return stars;
+  };
 
   if (!isOpen) return null;
 
@@ -160,6 +189,62 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
                 {t.add_btn}
               </button>
             </div>
+          </section>
+
+          {/* Reviews Section */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{t.reviews || 'Recensioni'}</h3>
+              {reviews.length > 0 && (
+                <button
+                  onClick={() => setShowReviews(!showReviews)}
+                  className="text-xs font-bold text-brand-600 hover:text-brand-700"
+                >
+                  {showReviews ? 'Nascondi' : 'Mostra'}
+                </button>
+              )}
+            </div>
+            
+            {/* Rating Stats */}
+            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 flex items-center gap-4">
+              <div className="text-3xl font-black text-slate-800 dark:text-white">
+                {userRating.rating ? userRating.rating.toFixed(1) : '-'}
+              </div>
+              <div className="flex flex-col">
+                <div className="flex">
+                  {userRating.rating ? renderStars(Math.round(userRating.rating)) : (
+                    <span className="text-slate-400 text-sm">Nessuna valutazione</span>
+                  )}
+                </div>
+                <span className="text-xs text-slate-500">{userRating.totalReviews} {t.reviews || 'recensioni'}</span>
+              </div>
+            </div>
+
+            {/* Reviews List */}
+            {showReviews && (
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {reviews.length === 0 ? (
+                  <p className="text-sm text-slate-400 text-center py-4">{t.no_reviews_yet || 'Nessuna recensione ancora'}</p>
+                ) : (
+                  reviews.slice(0, 5).map(review => (
+                    <div key={review.id} className="bg-white dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-xl p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="flex">{renderStars(review.rating)}</div>
+                          <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{review.reviewerName}</span>
+                        </div>
+                        <span className="text-[10px] text-slate-400">
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      {review.comment && (
+                        <p className="text-sm text-slate-600 dark:text-slate-400 italic">"{review.comment}"</p>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </section>
 
           {/* Action Row */}

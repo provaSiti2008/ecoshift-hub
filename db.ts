@@ -1,4 +1,4 @@
-import { User, Trip, CreditLog, Message, Notification, StudyGroup } from './types';
+import { User, Trip, CreditLog, Message, Notification, StudyGroup, Review, UserRating } from './types';
 import { normalizeLocation } from './constants';
 
 const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3000/api';
@@ -388,7 +388,7 @@ class MamaDB {
     this.triggerSyncUI();
   }
 
-  async getRealTimeDepartures(stationId: string, time?: Date): Promise<any[]> {
+async getRealTimeDepartures(stationId: string, time?: Date): Promise<any[]> {
     // stationId example: S01700 (Milano Centrale), S00248 (Milano Bovisa)
     let url = `${API_URL}/trains/departures/${stationId}`;
     if (time) {
@@ -397,6 +397,53 @@ class MamaDB {
     const res = await fetch(url);
     if (!res.ok) return [];
     return res.json();
+  }
+
+  // --- Reviews ---
+  async createReview(review: Review): Promise<{ ok: boolean; error?: string }> {
+    try {
+      const res = await fetch(`${API_URL}/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(review)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return { ok: false, error: data.error || res.statusText };
+      }
+      this.triggerSyncUI();
+      return { ok: true };
+    } catch (err) {
+      console.error('Error creating review:', err);
+      return { ok: false, error: err.message };
+    }
+  }
+
+  async getReviews(userId: string): Promise<Review[]> {
+    try {
+      const res = await fetch(`${API_URL}/reviews/${userId}`);
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    } catch (err) {
+      console.error('Error fetching reviews:', err);
+      return [];
+    }
+  }
+
+  async getUserRating(userId: string): Promise<UserRating> {
+    try {
+      const res = await fetch(`${API_URL}/users/${userId}/rating`);
+      if (!res.ok) return { rating: null, totalReviews: 0 };
+      const data = await res.json();
+      return {
+        rating: data.rating,
+        totalReviews: data.totalReviews || 0
+      };
+    } catch (err) {
+      console.error('Error fetching user rating:', err);
+      return { rating: null, totalReviews: 0 };
+    }
   }
 }
 
