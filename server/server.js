@@ -1168,6 +1168,117 @@ app.get('/api/users/:id/completed-trips', async (req, res) => {
     }
 });
 
+// --- Driver License ---
+
+// Validazione formato patente italiana
+function validateLicenseNumber(licenseNumber) {
+    // Formato patente italiana: 2 lettere + 6 caratteri alfanumerici (es. AB1234567)
+    const regex = /^[A-Z]{2}[A-Z0-9]{6}$/i;
+    return regex.test(licenseNumber);
+}
+
+// Validazione data scadenza
+function isLicenseValid(expiryDate) {
+    const expiry = new Date(expiryDate);
+    const now = new Date();
+    return expiry > now;
+}
+
+// Validazione categoria
+function isValidCategory(category) {
+    const validCategories = ['A', 'B', 'A+B', 'C', 'D', 'E', 'AM', 'A1', 'B1'];
+    return validCategories.includes(category.toUpperCase());
+}
+
+// POST /api/driver-license - Save driver license
+app.post('/api/driver-license', async (req, res) => {
+    const { userId, licenseNumber, issueDate, expiryDate, category, photoUrl } = req.body;
+    
+    // Validation
+    if (!userId || !licenseNumber || !issueDate || !expiryDate || !category || !photoUrl) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    // Validazione formale automatica
+    if (!validateLicenseNumber(licenseNumber)) {
+        return res.status(400).json({ error: 'INVALID_LICENSE_FORMAT' });
+    }
+    
+    if (!isValidCategory(category)) {
+        return res.status(400).json({ error: 'INVALID_CATEGORY' });
+    }
+    
+    if (!isLicenseValid(expiryDate)) {
+        return res.status(400).json({ error: 'LICENSE_EXPIRED' });
+    }
+    
+    try {
+        const id = crypto.randomUUID();
+        const now = new Date().toISOString();
+        
+        // Auto-verify if all checks pass
+        const status = 'verified';
+        const verifiedAt = now;
+        
+        const sql = isPostgres
+            ? `INSERT INTO driver_licenses (id, "userId", "licenseNumber", "issueDate", "expiryDate", category, "photoUrl", status, "verifiedAt", "createdAt")
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+               ON CONFLICT ("userId") DO UPDATE SET "licenseNumber" = EXCLUDED."licenseNumber", "issueDate" = EXCLUDED."issueDate", 
+               "expiryDate" = EXCLUDED."expiryDate", category = EXCLUDED.category, "photoUrl" = EXCLUDED."photoUrl", 
+               status = EXCLUDED.status, "verifiedAt" = EXCLUDED."verifiedAt"`
+            : `INSERT OR REPLACE INTO driver_licenses (id, userId, licenseNumber, issueDate, expiryDate, category, photoUrl, status, verifiedAt, createdAt)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        
+        await db.query(sql, [id, userId, licenseNumber.toUpperCase(), issueDate, expiryDate, category.toUpperCase(), photoUrl, status, verifiedAt, now]);
+        
+        res.json({ 
+            message: 'License saved and verified', 
+            id,
+            status,
+            verifiedAt
+        });
+    } catch (err) {
+        console.error('[Driver License] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET /api/driver-license/:userId - Get driver license status
+app.get('/api/driver-license/:userId', async (req, res) => {
+    try {
+        const sql = isPostgres
+            ? 'SELECT * FROM driver_licenses WHERE "userId" = ?'
+            : 'SELECT * FROM driver_licenses WHERE userId = ?';
+        
+        const rows = await db.query(sql, [req.params.userId]);
+        
+        if (rows.length === 0) {
+            return res.json(null);
+        }
+        
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('[Driver License] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// DELETE /api/driver-license/:userId - Delete driver license
+app.delete('/api/driver-license/:userId', async (req, res) => {
+    try {
+        const sql = isPostgres
+            ? 'DELETE FROM driver_licenses WHERE "userId" = ?'
+            : 'DELETE FROM driver_licenses WHERE userId = ?';
+        
+        await db.query(sql, [req.params.userId]);
+        
+        res.json({ message: 'License deleted' });
+    } catch (err) {
+        console.error('[Driver License] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 
 module.exports = app;
 

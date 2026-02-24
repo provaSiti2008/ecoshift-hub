@@ -180,6 +180,22 @@ confirm_reset: string;
     km: string;
     load_more: string;
 
+    // Driver License
+    driver_license: string;
+    license_number: string;
+    license_issue_date: string;
+    license_expiry_date: string;
+    license_category: string;
+    license_photo: string;
+    license_verified: string;
+    license_pending: string;
+    license_declared: string;
+    upload_license: string;
+    add_license: string;
+    remove_license: string;
+    license_not_verified: string;
+    license_verifying: string;
+
     // OfferRideModal
     propose_trip_header: string;
     propose_trip_subtitle: string;
@@ -393,6 +409,22 @@ export const translations: Record<Language, Translations> = {
         no_completed_trips: 'Nessun viaggio completato',
         km: 'km',
         load_more: 'Carica altri',
+
+        // Driver License
+        driver_license: 'Patente di guida',
+        license_number: 'Numero patente',
+        license_issue_date: 'Data rilascio',
+        license_expiry_date: 'Data scadenza',
+        license_category: 'Categoria',
+        license_photo: 'Foto patente',
+        license_verified: 'Patente verificata',
+        license_pending: 'Verifica in corso',
+        license_declared: 'Patente dichiarata',
+        upload_license: 'Carica patente',
+        add_license: 'Aggiungi patente',
+        remove_license: 'Rimuovi patente',
+        license_not_verified: 'Patente non verificata',
+        license_verifying: 'Verifica in corso...',
 
         propose_trip_header: 'Proponi un Viaggio',
         propose_trip_subtitle: 'Aiuta la community e guadagna Eco-Credits (+50💎)',
@@ -639,6 +671,22 @@ participation_cancelled: 'Participation cancelled.',
         km: 'km',
         load_more: 'Load more',
 
+        // Driver License
+        driver_license: 'Driver License',
+        license_number: 'License number',
+        license_issue_date: 'Issue date',
+        license_expiry_date: 'Expiry date',
+        license_category: 'Category',
+        license_photo: 'License photo',
+        license_verified: 'License verified',
+        license_pending: 'Verification pending',
+        license_declared: 'License declared',
+        upload_license: 'Upload license',
+        add_license: 'Add license',
+        remove_license: 'Remove license',
+        license_not_verified: 'License not verified',
+        license_verifying: 'Verifying...',
+
         footer_about: 'About',
         footer_privacy: 'Privacy',
         footer_terms: 'Terms',
@@ -845,6 +893,22 @@ participation_cancelled: 'Participación cancelada.',
         no_completed_trips: 'Sin viajes completados',
         km: 'km',
         load_more: 'Cargar más',
+
+        // Driver License
+        driver_license: 'Carné de conducir',
+        license_number: 'Número de licencia',
+        license_issue_date: 'Fecha de emisión',
+        license_expiry_date: 'Fecha de caducidad',
+        license_category: 'Categoría',
+        license_photo: 'Foto del carné',
+        license_verified: 'Carné verificado',
+        license_pending: 'Verificación pendiente',
+        license_declared: 'Carné declarado',
+        upload_license: 'Subir carné',
+        add_license: 'Añadir carné',
+        remove_license: 'Eliminar carné',
+        license_not_verified: 'Carné no verificado',
+        license_verifying: 'Verificando...',
 
         footer_about: 'Quiénes somos',
         footer_privacy: 'Privacidad',
@@ -1053,6 +1117,22 @@ participation_cancelled: 'Participation annulée.',
         km: 'km',
         load_more: 'Charger plus',
 
+        // Driver License
+        driver_license: 'Permis de conduire',
+        license_number: 'Numéro de permis',
+        license_issue_date: 'Date de délivrance',
+        license_expiry_date: 'Date d\'expiration',
+        license_category: 'Catégorie',
+        license_photo: 'Photo du permis',
+        license_verified: 'Permis vérifié',
+        license_pending: 'Vérification en cours',
+        license_declared: 'Permis déclaré',
+        upload_license: 'Télécharger permis',
+        add_license: 'Ajouter permis',
+        remove_license: 'Supprimer permis',
+        license_not_verified: 'Permis non vérifié',
+        license_verifying: 'Vérification...',
+
         footer_about: 'À propos',
         footer_privacy: 'Confidentialité',
         footer_terms: 'Conditions',
@@ -1260,6 +1340,22 @@ participation_cancelled: 'Teilnahme storniert.',
         km: 'km',
         load_more: 'Mehr laden',
 
+        // Driver License
+        driver_license: 'Führerschein',
+        license_number: 'Führerscheinnummer',
+        license_issue_date: 'Ausstellungsdatum',
+        license_expiry_date: 'Ablaufdatum',
+        license_category: 'Kategorie',
+        license_photo: 'Führerschein-Foto',
+        license_verified: 'Führerschein verifiziert',
+        license_pending: 'Verifizierung ausstehend',
+        license_declared: 'Führerschein deklariert',
+        upload_license: 'Führerschein hochladen',
+        add_license: 'Führerschein hinzufügen',
+        remove_license: 'Führerschein entfernen',
+        license_not_verified: 'Führerschein nicht verifiziert',
+        license_verifying: 'Verifiziere...',
+
         footer_about: 'Über uns',
         footer_privacy: 'Datenschutz',
         footer_terms: 'AGB',
@@ -1466,6 +1562,22 @@ participation_cancelled: 'Deelname geannuleerd.',
         no_completed_trips: 'Geen voltooide reizen',
         km: 'km',
         load_more: 'Meer laden',
+
+        // Driver License
+        driver_license: 'Rijbewijs',
+        license_number: 'Rijbewijsnummer',
+        license_issue_date: 'Uitgiftedatum',
+        license_expiry_date: 'Vervaldatum',
+        license_category: 'Categorie',
+        license_photo: 'Foto rijbewijs',
+        license_verified: 'Rijbewijs geverifieerd',
+        license_pending: 'Verificatie in behandeling',
+        license_declared: 'Rijbewijs gedeclareerd',
+        upload_license: 'Upload rijbewijs',
+        add_license: 'Rijbewijs toevoegen',
+        remove_license: 'Rijbewijs verwijderen',
+        license_not_verified: 'Rijbewijs niet geverifieerd',
+        license_verifying: 'Verifiëren...',
 
         footer_about: 'Over ons',
         footer_privacy: 'Privacy',

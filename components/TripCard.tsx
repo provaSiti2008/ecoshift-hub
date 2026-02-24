@@ -4,7 +4,7 @@ import { Trip, User } from '../types';
 import { TripChat } from './TripChat';
 import { db } from '../db';
 import { useLanguage } from '../i18n';
-import { UserRating } from '../types';
+import { UserRating, DriverLicense } from '../types';
 
 interface TripCardProps {
   trip: Trip;
@@ -69,17 +69,22 @@ export const TripCard: React.FC<TripCardProps> = ({
   const isDriver = trip.driverId === currentUser.id;
   const isPassenger = trip.passengerIds && trip.passengerIds.includes(currentUser.id);
   const [driverRating, setDriverRating] = useState<UserRating | null>(null);
+  const [driverLicenseVerified, setDriverLicenseVerified] = useState(false);
 
   useEffect(() => {
-    const loadDriverRating = async () => {
+    const loadDriverData = async () => {
       try {
-        const rating = await db.getUserRating(trip.driverId);
+        const [rating, license] = await Promise.all([
+          db.getUserRating(trip.driverId),
+          db.getDriverLicense(trip.driverId)
+        ]);
         setDriverRating(rating);
+        setDriverLicenseVerified(license?.status === 'verified');
       } catch (e) {
-        console.error("Error loading driver rating", e);
+        console.error("Error loading driver data", e);
       }
     };
-    loadDriverRating();
+    loadDriverData();
   }, [trip.driverId]);
 
   const renderStars = (rating: number | null | undefined) => {
@@ -191,6 +196,9 @@ export const TripCard: React.FC<TripCardProps> = ({
                 onClick={() => !isDriver && onViewProfile && onViewProfile(trip.driverId)}
               >
                 {isDriver ? t.me : trip.driverName}
+                {driverLicenseVerified && (
+                  <span className="ml-1 inline-flex items-center justify-center w-4 h-4 bg-emerald-500 rounded-full text-[8px] text-white" title="Patente verificata">✓</span>
+                )}
               </p>
               {driverRating && driverRating.rating && (
                 <div className="flex items-center gap-1 mt-1">
@@ -226,6 +234,9 @@ export const TripCard: React.FC<TripCardProps> = ({
                 onClick={() => !isDriver && onViewProfile && onViewProfile(trip.driverId)}
               >
                 {isDriver ? t.me : trip.driverName}
+                {driverLicenseVerified && (
+                  <span className="ml-1 inline-flex items-center justify-center w-4 h-4 bg-emerald-500 rounded-full text-[8px] text-white" title="Patente verificata">✓</span>
+                )}
               </p>
               {driverRating && driverRating.rating && (
                 <div className="flex items-center gap-1 mt-1">

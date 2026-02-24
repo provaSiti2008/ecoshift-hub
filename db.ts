@@ -1,4 +1,4 @@
-import { User, Trip, CreditLog, Message, Notification, StudyGroup, Review, UserRating, TripsStats, CompletedTrip, CompletedTripsResponse } from './types';
+import { User, Trip, CreditLog, Message, Notification, StudyGroup, Review, UserRating, TripsStats, CompletedTrip, CompletedTripsResponse, DriverLicense } from './types';
 import { normalizeLocation } from './constants';
 
 const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3000/api';
@@ -476,6 +476,48 @@ async getRealTimeDepartures(stationId: string, time?: Date): Promise<any[]> {
     } catch (err) {
       console.error('Error fetching completed trips:', err);
       return { trips: [], total: 0, hasMore: false };
+    }
+  }
+
+  // --- Driver License ---
+  async saveDriverLicense(license: DriverLicense): Promise<{ success: boolean; message?: string }> {
+    try {
+      const res = await fetch(`${API_URL}/driver-license`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(license)
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        return { success: false, message: data.error };
+      }
+      return { success: true };
+    } catch (err) {
+      console.error('Error saving driver license:', err);
+      return { success: false, message: 'Error saving license' };
+    }
+  }
+
+  async getDriverLicense(userId: string): Promise<DriverLicense | null> {
+    try {
+      const res = await fetch(`${API_URL}/driver-license/${userId}`);
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (err) {
+      console.error('Error fetching driver license:', err);
+      return null;
+    }
+  }
+
+  async deleteDriverLicense(userId: string): Promise<{ success: boolean }> {
+    try {
+      const res = await fetch(`${API_URL}/driver-license/${userId}`, {
+        method: 'DELETE'
+      });
+      return { success: res.ok };
+    } catch (err) {
+      console.error('Error deleting driver license:', err);
+      return { success: false };
     }
   }
 }

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { db } from '../db';
-import { User, UserRole, Review, TripsStats, CompletedTrip } from '../types';
+import { User, UserRole, Review, TripsStats, CompletedTrip, DriverLicense } from '../types';
 import { useLanguage } from '../i18n';
 
 interface ProfileModalProps {
@@ -36,6 +36,18 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
   const [tripsOffset, setTripsOffset] = useState(0);
   const [showTripsHistory, setShowTripsHistory] = useState(false);
 
+  // Driver License states
+  const [driverLicense, setDriverLicense] = useState<DriverLicense | null>(null);
+  const [licenseForm, setLicenseForm] = useState({
+    licenseNumber: '',
+    issueDate: '',
+    expiryDate: '',
+    category: 'B',
+    photoUrl: ''
+  });
+  const [licenseLoading, setLicenseLoading] = useState(false);
+  const [licenseError, setLicenseError] = useState<string | null>(null);
+
   useEffect(() => {
     if (isOpen) {
       setFormData({
@@ -47,8 +59,69 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
       loadReviews();
       loadTripsStats();
       loadCompletedTrips(0, false);
+      loadDriverLicense();
     }
   }, [isOpen, user]);
+
+  const loadDriverLicense = async () => {
+    try {
+      const license = await db.getDriverLicense(user.id);
+      setDriverLicense(license);
+    } catch (err) {
+      console.error('Error loading driver license:', err);
+    }
+  };
+
+  const handleSaveLicense = async () => {
+    setLicenseError(null);
+    setLicenseLoading(true);
+    
+    if (!licenseForm.licenseNumber || !licenseForm.issueDate || !licenseForm.expiryDate || !licenseForm.photoUrl) {
+      setLicenseError('Compila tutti i campi');
+      setLicenseLoading(false);
+      return;
+    }
+
+    try {
+      const result = await db.saveDriverLicense({
+        id: '',
+        userId: user.id,
+        licenseNumber: licenseForm.licenseNumber,
+        issueDate: licenseForm.issueDate,
+        expiryDate: licenseForm.expiryDate,
+        category: licenseForm.category,
+        photoUrl: licenseForm.photoUrl,
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      });
+
+      if (result.success) {
+        await loadDriverLicense();
+      } else {
+        setLicenseError(result.message || 'Errore nel salvataggio');
+      }
+    } catch (err) {
+      setLicenseError('Errore nel salvataggio');
+    } finally {
+      setLicenseLoading(false);
+    }
+  };
+
+  const handleRemoveLicense = async () => {
+    try {
+      await db.deleteDriverLicense(user.id);
+      setDriverLicense(null);
+      setLicenseForm({
+        licenseNumber: '',
+        issueDate: '',
+        expiryDate: '',
+        category: 'B',
+        photoUrl: ''
+      });
+    } catch (err) {
+      console.error('Error removing license:', err);
+    }
+  };
 
   const loadReviews = async () => {
     try {
@@ -263,6 +336,112 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
               )}
             </div>
           </section>
+
+          {/* Driver License Section - shown for own profile */}
+          {isOwnProfile && (
+          <section className="space-y-4">
+            <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{t.driver_license}</h3>
+            
+            {/* License Status */}
+            {driverLicense && (
+              <div className="bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800 rounded-2xl p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold">
+                    ✓
+                  </div>
+                  <div>
+                    <p className="font-bold text-emerald-700 dark:text-emerald-300">{t.license_verified}</p>
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                      {driverLicense.licenseNumber} • {driverLicense.category}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleRemoveLicense}
+                  className="text-xs text-rose-500 hover:text-rose-700 font-bold"
+                >
+                  {t.remove_license}
+                </button>
+              </div>
+            )}
+
+            {/* License Form */}
+            {!driverLicense && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">{t.license_number}</label>
+                    <input
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-sm"
+                      placeholder="AB1234567"
+                      value={licenseForm.licenseNumber}
+                      onChange={e => setLicenseForm({ ...licenseForm, licenseNumber: e.target.value.toUpperCase() })}
+                      maxLength={8}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">{t.license_category}</label>
+                    <select
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-sm"
+                      value={licenseForm.category}
+                      onChange={e => setLicenseForm({ ...licenseForm, category: e.target.value })}
+                    >
+                      <option value="B">B</option>
+                      <option value="A">A</option>
+                      <option value="A+B">A+B</option>
+                      <option value="C">C</option>
+                      <option value="D">D</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">{t.license_issue_date}</label>
+                    <input
+                      type="date"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-sm"
+                      value={licenseForm.issueDate}
+                      onChange={e => setLicenseForm({ ...licenseForm, issueDate: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">{t.license_expiry_date}</label>
+                    <input
+                      type="date"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-sm"
+                      value={licenseForm.expiryDate}
+                      onChange={e => setLicenseForm({ ...licenseForm, expiryDate: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1">{t.license_photo}</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-sm"
+                    placeholder="URL foto patente"
+                    value={licenseForm.photoUrl}
+                    onChange={e => setLicenseForm({ ...licenseForm, photoUrl: e.target.value })}
+                  />
+                </div>
+
+                {licenseError && (
+                  <p className="text-xs text-rose-500 font-bold">{licenseError}</p>
+                )}
+
+                <button
+                  onClick={handleSaveLicense}
+                  disabled={licenseLoading}
+                  className="w-full bg-brand-600 text-white py-3 rounded-xl font-bold disabled:opacity-50"
+                >
+                  {licenseLoading ? t.license_verifying : t.add_license}
+                </button>
+              </div>
+            )}
+          </section>
+          )}
 
           {/* Edit Section - only shown for own profile */}
           {isOwnProfile && (

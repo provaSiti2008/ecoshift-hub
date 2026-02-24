@@ -124,3 +124,16 @@ export interface CompletedTripsResponse {
   total: number;
   hasMore: boolean;
 }
+
+export interface DriverLicense {
+  id: string;
+  userId: string;
+  licenseNumber: string;
+  issueDate: string;
+  expiryDate: string;
+  category: string;
+  photoUrl: string;
+  status: 'pending' | 'verified' | 'rejected';
+  verifiedAt?: string;
+  createdAt: string;
+}
