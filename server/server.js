@@ -977,14 +977,25 @@ app.get('/api/trips/:tripId/participants', async (req, res) => {
 // GET /api/users/:id/trips-stats - Get aggregated trip statistics for a user
 app.get('/api/users/:id/trips-stats', async (req, res) => {
     const userId = req.params.id;
-    const now = new Date().toISOString();
+    const includeFuture = req.query.includeFuture === 'true';
     
     try {
-        // Get all completed trips where user is driver OR passenger
-        const tripsSql = isPostgres
-            ? 'SELECT * FROM trips WHERE "departureTime" < ?'
-            : 'SELECT * FROM trips WHERE departureTime < ?';
-        const allTrips = await db.query(tripsSql, [now]);
+        // Build query based on includeFuture parameter
+        let tripsSql;
+        if (includeFuture) {
+            tripsSql = isPostgres
+                ? 'SELECT * FROM trips'
+                : 'SELECT * FROM trips';
+        } else {
+            const now = new Date().toISOString();
+            tripsSql = isPostgres
+                ? 'SELECT * FROM trips WHERE "departureTime" < ?'
+                : 'SELECT * FROM trips WHERE departureTime < ?';
+        }
+        
+        const allTrips = includeFuture 
+            ? await db.query(tripsSql)
+            : await db.query(tripsSql, [new Date().toISOString()]);
         
         let totalAsDriver = 0;
         let totalAsPassenger = 0;
@@ -1028,14 +1039,25 @@ app.get('/api/users/:id/completed-trips', async (req, res) => {
     const userId = req.params.id;
     const limit = parseInt(req.query.limit) || 20;
     const offset = parseInt(req.query.offset) || 0;
-    const now = new Date().toISOString();
+    const includeFuture = req.query.includeFuture === 'true';
     
     try {
-        // Get all completed trips where user is driver OR passenger
-        const tripsSql = isPostgres
-            ? 'SELECT * FROM trips WHERE "departureTime" < ? ORDER BY "departureTime" DESC'
-            : 'SELECT * FROM trips WHERE departureTime < ? ORDER BY departureTime DESC';
-        const allTrips = await db.query(tripsSql, [now]);
+        // Build query based on includeFuture parameter
+        let tripsSql;
+        if (includeFuture) {
+            tripsSql = isPostgres
+                ? 'SELECT * FROM trips ORDER BY "departureTime" DESC'
+                : 'SELECT * FROM trips ORDER BY departureTime DESC';
+        } else {
+            const now = new Date().toISOString();
+            tripsSql = isPostgres
+                ? 'SELECT * FROM trips WHERE "departureTime" < ? ORDER BY "departureTime" DESC'
+                : 'SELECT * FROM trips WHERE departureTime < ? ORDER BY departureTime DESC';
+        }
+        
+        const allTrips = includeFuture 
+            ? await db.query(tripsSql)
+            : await db.query(tripsSql, [new Date().toISOString()]);
         
         // Filter trips where user participated
         const userTrips = [];
