@@ -448,7 +448,7 @@ async getRealTimeDepartures(stationId: string, time?: Date): Promise<any[]> {
 
   async getUserTripsStats(userId: string): Promise<TripsStats> {
     try {
-      const res = await fetch(`${API_URL}/users/${userId}/trips-stats?includeFuture=true`);
+      const res = await fetch(`${API_URL}/users/${userId}/trips-stats`);
       if (!res.ok) return { totalAsDriver: 0, totalAsPassenger: 0, totalCo2Saved: 0, totalDistanceKm: 0 };
       const data = await res.json();
       return {
@@ -465,7 +465,7 @@ async getRealTimeDepartures(stationId: string, time?: Date): Promise<any[]> {
 
   async getCompletedTrips(userId: string, limit = 20, offset = 0): Promise<CompletedTripsResponse> {
     try {
-      const res = await fetch(`${API_URL}/users/${userId}/completed-trips?limit=${limit}&offset=${offset}&includeFuture=true`);
+      const res = await fetch(`${API_URL}/users/${userId}/completed-trips?limit=${limit}&offset=${offset}`);
       if (!res.ok) return { trips: [], total: 0, hasMore: false };
       const data = await res.json();
       return {

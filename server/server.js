@@ -974,28 +974,17 @@ app.get('/api/trips/:tripId/participants', async (req, res) => {
 
 // --- User Trips Stats (for Profile) ---
 
-// GET /api/users/:id/trips-stats - Get aggregated trip statistics for a user
+// GET /api/users/:id/trips-stats - Get aggregated trip statistics for a user (ALL trips)
 app.get('/api/users/:id/trips-stats', async (req, res) => {
     const userId = req.params.id;
-    const includeFuture = req.query.includeFuture === 'true';
     
     try {
-        // Build query based on includeFuture parameter
-        let tripsSql;
-        if (includeFuture) {
-            tripsSql = isPostgres
-                ? 'SELECT * FROM trips'
-                : 'SELECT * FROM trips';
-        } else {
-            const now = new Date().toISOString();
-            tripsSql = isPostgres
-                ? 'SELECT * FROM trips WHERE "departureTime" < ?'
-                : 'SELECT * FROM trips WHERE departureTime < ?';
-        }
+        // Get ALL trips (no date filter)
+        const tripsSql = isPostgres
+            ? 'SELECT * FROM trips'
+            : 'SELECT * FROM trips';
         
-        const allTrips = includeFuture 
-            ? await db.query(tripsSql)
-            : await db.query(tripsSql, [new Date().toISOString()]);
+        const allTrips = await db.query(tripsSql);
         
         let totalAsDriver = 0;
         let totalAsPassenger = 0;
@@ -1013,7 +1002,6 @@ app.get('/api/users/:id/trips-stats', async (req, res) => {
                 totalDistanceKm += (trip.distanceKm || 0);
             } else if (isPassenger) {
                 totalAsPassenger++;
-                // For passengers, calculate proportional CO2 and distance based on share
                 const passengerCount = passengerIds.length;
                 if (passengerCount > 0) {
                     totalCo2Saved += ((trip.co2Saved || 0) / passengerCount);
@@ -1034,30 +1022,19 @@ app.get('/api/users/:id/trips-stats', async (req, res) => {
     }
 });
 
-// GET /api/users/:id/completed-trips - Get list of completed trips for a user
+// GET /api/users/:id/completed-trips - Get list of trips for a user (ALL trips)
 app.get('/api/users/:id/completed-trips', async (req, res) => {
     const userId = req.params.id;
     const limit = parseInt(req.query.limit) || 20;
     const offset = parseInt(req.query.offset) || 0;
-    const includeFuture = req.query.includeFuture === 'true';
     
     try {
-        // Build query based on includeFuture parameter
-        let tripsSql;
-        if (includeFuture) {
-            tripsSql = isPostgres
-                ? 'SELECT * FROM trips ORDER BY "departureTime" DESC'
-                : 'SELECT * FROM trips ORDER BY departureTime DESC';
-        } else {
-            const now = new Date().toISOString();
-            tripsSql = isPostgres
-                ? 'SELECT * FROM trips WHERE "departureTime" < ? ORDER BY "departureTime" DESC'
-                : 'SELECT * FROM trips WHERE departureTime < ? ORDER BY departureTime DESC';
-        }
+        // Get ALL trips (no date filter)
+        const tripsSql = isPostgres
+            ? 'SELECT * FROM trips ORDER BY "departureTime" DESC'
+            : 'SELECT * FROM trips ORDER BY departureTime DESC';
         
-        const allTrips = includeFuture 
-            ? await db.query(tripsSql)
-            : await db.query(tripsSql, [new Date().toISOString()]);
+        const allTrips = await db.query(tripsSql);
         
         // Filter trips where user participated
         const userTrips = [];
