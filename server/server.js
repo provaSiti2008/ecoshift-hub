@@ -562,6 +562,12 @@ app.get('/api/trips', async (req, res) => {
 
 app.post('/api/trips', async (req, res) => {
     const trip = req.body;
+    
+    // Calcola distanza e CO2 reali usando le coordinate
+    const realDistance = getRealDistance(trip.from, trip.to);
+    const distanceKm = realDistance !== null ? realDistance : (trip.distanceKm || 10);
+    const co2Saved = Math.round(distanceKm * 0.21 * 10) / 10;
+    
     const params = [
         trip.id,
         trip.driverId,
@@ -570,8 +576,8 @@ app.post('/api/trips', async (req, res) => {
         trip.to,
         trip.departureTime,
         trip.seatsAvailable,
-        trip.distanceKm,
-        trip.co2Saved,
+        distanceKm,
+        co2Saved,
         trip.tutoringSubject,
         trip.assistanceOffered ? 1 : 0,
         JSON.stringify(trip.specialEquipment || []),
@@ -587,7 +593,7 @@ app.post('/api/trips', async (req, res) => {
 
     try {
         await db.query(sql, params);
-        res.json({ message: 'Trip saved', id: trip.id });
+        res.json({ message: 'Trip saved', id: trip.id, distanceKm, co2Saved });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

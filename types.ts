@@ -26,8 +26,8 @@ export interface Trip {
   to: string;
   departureTime: string;
   seatsAvailable: number;
-  distanceKm: number;
-  co2Saved: number;
+  distanceKm?: number; // Opzionale - calcolato automaticamente dal server
+  co2Saved?: number; // Opzionale - calcolato automaticamente dal server
   tutoringSubject?: string; // Mission 4
   assistanceOffered: boolean; // Mission 5
   specialEquipment?: string[]; // e.g., Ramp, Visual guide

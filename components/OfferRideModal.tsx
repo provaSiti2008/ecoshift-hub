@@ -83,8 +83,7 @@ export const OfferRideModal: React.FC<OfferRideModalProps> = ({ isOpen, onClose,
       to: formData.to,
       departureTime: formData.departureTime,
       seatsAvailable: formData.seatsAvailable,
-      distanceKm: formData.distanceKm,
-      co2Saved: Math.round(formData.distanceKm * 0.3 * 10) / 10,
+      // distanceKm e co2Saved vengono calcolati automaticamente dal server
       tutoringSubject: formData.tutoringSubject ? capitalizeSubject(formData.tutoringSubject.trim()) : undefined,
       assistanceOffered: formData.assistanceOffered,
       passengerIds: []
