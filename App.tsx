@@ -17,6 +17,7 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [viewedUser, setViewedUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'pending'>('pending');
@@ -47,6 +48,19 @@ const App: React.FC = () => {
   const handleUserUpdate = useCallback((updatedUser: User) => {
     setCurrentUser(updatedUser);
     db.setSession(updatedUser);
+  }, []);
+
+  const handleViewProfile = useCallback(async (userId: string) => {
+    try {
+      const users = await db.getUsers();
+      const user = users.find(u => u.id === userId);
+      if (user) {
+        setViewedUser(user);
+        setIsProfileModalOpen(true);
+      }
+    } catch (err) {
+      console.error('Error viewing profile:', err);
+    }
   }, []);
 
   // Sincronizza tema con l'utente loggato
@@ -326,6 +340,7 @@ const App: React.FC = () => {
           setIsOfferModalOpen={setIsOfferModalOpen}
           onUserUpdate={handleUserUpdate}
           userLocation={userLocation}
+          onViewProfile={handleViewProfile}
         />
       </div>
 
@@ -364,9 +379,11 @@ const App: React.FC = () => {
 {/* Modals */}
       <ProfileModal
         isOpen={isProfileModalOpen}
-        onClose={() => setIsProfileModalOpen(false)}
-        user={currentUser}
-        onUpdate={handleUserUpdate}
+        onClose={() => { setIsProfileModalOpen(false); setViewedUser(null); }}
+        user={viewedUser || currentUser}
+        onUpdate={viewedUser ? undefined : handleUserUpdate}
+        isOwnProfile={!viewedUser}
+        currentUserId={currentUser?.id}
       />
 
       {/* Footer */}

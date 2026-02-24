@@ -8,10 +8,12 @@ interface ProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: User;
-  onUpdate: (user: User) => void;
+  onUpdate?: (user: User) => void;
+  isOwnProfile?: boolean;
+  currentUserId?: string;
 }
 
-export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUpdate }) => {
+export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUpdate, isOwnProfile = true, currentUserId }) => {
   const { t } = useLanguage();
   const [formData, setFormData] = useState({
     name: user.name,
@@ -153,6 +155,118 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
         </div>
 
         <div className="p-8 space-y-8 overflow-y-auto">
+          {/* Header: Avatar and Stats - shown for all profiles */}
+          <section className="space-y-4">
+            <div className="flex items-center gap-4">
+              <img
+                src={`https://picsum.photos/seed/${user.id}/128/128`}
+                alt={user.name}
+                className="w-20 h-20 rounded-2xl border-4 border-brand-500 shadow-lg"
+              />
+              <div>
+                <h2 className="text-xl font-black text-slate-800 dark:text-white">{user.name}</h2>
+                <p className="text-sm text-slate-500">{user.role === 'BOTH' ? t.role_flexible : user.role === 'DRIVER' ? t.role_driver_only : t.role_passenger_only}</p>
+              </div>
+            </div>
+
+            {/* Stats Cards Grid 2x2 */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-brand-50 dark:bg-brand-900/30 border border-brand-100 dark:border-brand-800 rounded-2xl p-4">
+                <div className="text-2xl font-black text-brand-600 dark:text-brand-400">
+                  {tripsStats.totalAsDriver}
+                </div>
+                <div className="text-xs font-bold text-brand-700 dark:text-brand-300 mt-1">
+                  {t.as_driver}
+                </div>
+              </div>
+
+              <div className="bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800 rounded-2xl p-4">
+                <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                  {tripsStats.totalAsPassenger}
+                </div>
+                <div className="text-xs font-bold text-emerald-700 dark:text-emerald-300 mt-1">
+                  {t.as_passenger}
+                </div>
+              </div>
+
+              <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-100 dark:border-amber-800 rounded-2xl p-4">
+                <div className="text-2xl font-black text-amber-600 dark:text-amber-400">
+                  {tripsStats.totalCo2Saved.toFixed(1)}
+                </div>
+                <div className="text-xs font-bold text-amber-700 dark:text-amber-300 mt-1">
+                  {t.co2_saved} (kg)
+                </div>
+              </div>
+
+              <div className="bg-violet-50 dark:bg-violet-900/30 border border-violet-100 dark:border-violet-800 rounded-2xl p-4">
+                <div className="text-2xl font-black text-violet-600 dark:text-violet-400">
+                  {tripsStats.totalDistanceKm.toFixed(1)}
+                </div>
+                <div className="text-xs font-bold text-violet-700 dark:text-violet-300 mt-1">
+                  {t.total_distance} ({t.km})
+                </div>
+              </div>
+            </div>
+
+            {/* Rating */}
+            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 flex items-center gap-4">
+              <div className="text-3xl font-black text-slate-800 dark:text-white">
+                {userRating.rating ? userRating.rating.toFixed(1) : '-'}
+              </div>
+              <div className="flex flex-col">
+                <div className="flex">
+                  {userRating.rating ? renderStars(Math.round(userRating.rating)) : (
+                    <span className="text-slate-400 text-sm">Nessuna valutazione</span>
+                  )}
+                </div>
+                <span className="text-xs text-slate-500">{userRating.totalReviews} {t.reviews || 'recensioni'}</span>
+              </div>
+            </div>
+
+            {/* Reviews List */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{t.reviews || 'Recensioni'}</h3>
+                {reviews.length > 0 && (
+                  <button
+                    onClick={() => setShowReviews(!showReviews)}
+                    className="text-xs font-bold text-brand-600 hover:text-brand-700"
+                  >
+                    {showReviews ? 'Nascondi' : 'Mostra'}
+                  </button>
+                )}
+              </div>
+              
+              {showReviews && (
+                <div className="space-y-3 max-h-48 overflow-y-auto">
+                  {reviews.length === 0 ? (
+                    <p className="text-sm text-slate-400 text-center py-4">{t.no_reviews_yet || 'Nessuna recensione ancora'}</p>
+                  ) : (
+                    reviews.slice(0, 5).map(review => (
+                      <div key={review.id} className="bg-white dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-xl p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="flex">{renderStars(review.rating)}</div>
+                            <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{review.reviewerName}</span>
+                          </div>
+                          <span className="text-[10px] text-slate-400">
+                            {new Date(review.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        {review.comment && (
+                          <p className="text-sm text-slate-600 dark:text-slate-400 italic">"{review.comment}"</p>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Edit Section - only shown for own profile */}
+          {isOwnProfile && (
+          <>
           {/* Informazioni Base */}
           <section className="space-y-4">
             <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{t.base_info}</h3>
@@ -391,8 +505,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
               </div>
             )}
           </section>
+          </>
+          )}
 
-          {/* Action Row */}
+          {/* Action Row - only for own profile */}
+          {isOwnProfile && (
           <div className="pt-4 space-y-4">
             <button onClick={handleSave} className="w-full bg-brand-600 text-white py-5 rounded-2xl font-black shadow-xl shadow-brand-100 hover:bg-brand-700 transition-all">
               {t.save_changes}
@@ -439,6 +556,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
               )}
             </div>
           </div>
+          )}
         </div>
       </div>
     </div>

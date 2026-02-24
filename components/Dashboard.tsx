@@ -80,9 +80,10 @@ interface DashboardProps {
   setIsOfferModalOpen: (open: boolean) => void;
   onUserUpdate: (user: User) => void;
   userLocation?: UserLocation | null;
+  onViewProfile?: (userId: string) => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalOpen, setIsOfferModalOpen, onUserUpdate, userLocation }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ currentUser, isOfferModalOpen, setIsOfferModalOpen, onUserUpdate, userLocation, onViewProfile }) => {
   const { t } = useLanguage();
   const { theme } = useTheme();
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -516,6 +517,7 @@ const loadData = async () => {
                       onQuickBook={handleQuickBook}
                       onCancelParticipation={handleCancelParticipation}
                       onCancelTrip={handleCancelTrip}
+                      onViewProfile={onViewProfile}
                     />
                   </div>
                 ))}

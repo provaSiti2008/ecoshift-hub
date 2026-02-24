@@ -12,6 +12,7 @@ interface TripCardProps {
   onQuickBook?: (tripId: string, seats: number) => void;
   onCancelParticipation?: (tripId: string) => void;
   onCancelTrip?: (tripId: string) => void;
+  onViewProfile?: (userId: string) => void;
 }
 
 const PassengerList: React.FC<{ passengerIds: string[] }> = ({ passengerIds }) => {
@@ -60,7 +61,8 @@ export const TripCard: React.FC<TripCardProps> = ({
   currentUser,
   onQuickBook,
   onCancelParticipation,
-  onCancelTrip
+  onCancelTrip,
+  onViewProfile
 }) => {
   const { t, language } = useLanguage();
   const isAvailable = trip.seatsAvailable > 0;
@@ -184,7 +186,12 @@ export const TripCard: React.FC<TripCardProps> = ({
           <div className="flex items-center gap-3">
             <div className="text-right hidden md:block">
               <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{t.driver_label}</p>
-              <p className="text-sm font-bold text-slate-800 dark:text-white">{isDriver ? t.me : trip.driverName}</p>
+              <p 
+                className={`text-sm font-bold text-slate-800 dark:text-white ${!isDriver && onViewProfile ? 'cursor-pointer hover:text-brand-600' : ''}`}
+                onClick={() => !isDriver && onViewProfile && onViewProfile(trip.driverId)}
+              >
+                {isDriver ? t.me : trip.driverName}
+              </p>
               {driverRating && driverRating.rating && (
                 <div className="flex items-center gap-1 mt-1">
                   <div className="flex">{renderStars(driverRating.rating)}</div>
@@ -199,7 +206,10 @@ export const TripCard: React.FC<TripCardProps> = ({
                 </div>
               )}
             </div>
-            <div className="relative">
+            <div 
+              className={`relative ${!isDriver && onViewProfile ? 'cursor-pointer' : ''}`}
+              onClick={() => !isDriver && onViewProfile && onViewProfile(trip.driverId)}
+            >
               <img
                 src={`https://picsum.photos/seed/${trip.driverId}/64/64`}
                 alt={trip.driverName}
@@ -211,7 +221,12 @@ export const TripCard: React.FC<TripCardProps> = ({
             </div>
             <div className="block md:hidden">
               <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{t.driver_label}</p>
-              <p className="text-sm font-bold text-slate-800 dark:text-white">{isDriver ? t.me : trip.driverName}</p>
+              <p 
+                className={`text-sm font-bold text-slate-800 dark:text-white ${!isDriver && onViewProfile ? 'cursor-pointer hover:text-brand-600' : ''}`}
+                onClick={() => !isDriver && onViewProfile && onViewProfile(trip.driverId)}
+              >
+                {isDriver ? t.me : trip.driverName}
+              </p>
               {driverRating && driverRating.rating && (
                 <div className="flex items-center gap-1 mt-1">
                   <div className="flex">{renderStars(driverRating.rating)}</div>
