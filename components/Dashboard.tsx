@@ -325,7 +325,7 @@ const loadData = async () => {
       </div>
 
       {/* Hero Header - Glass Card */}
-      <header className="glass-panel rounded-3xl p-8 md:p-10 text-slate-800 dark:text-white shadow-xl relative overflow-hidden group">
+      <header className="glass-panel rounded-3xl p-8 md:p-10 text-slate-800 dark:text-white shadow-xl relative overflow-hidden group z-50">
         <div className="absolute inset-0 bg-gradient-to-r from-brand-500/10 to-accent-neon/10 dark:from-brand-500/20 dark:to-accent-neon/20 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
         <div className="flex flex-col md:flex-row justify-between items-center gap-8 relative z-10">
           <div className="text-center md:text-left space-y-2">
