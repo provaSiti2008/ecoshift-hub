@@ -296,7 +296,7 @@ const loadData = async () => {
   };
 
   return (
-    <main className="max-w-7xl mx-auto p-4 md:p-6 space-y-8 animate-fade-in relative z-10">
+    <main className="max-w-7xl mx-auto p-4 md:p-6 space-y-8 animate-fade-in relative z-10 overflow-visible">
 <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
       <OfferRideModal
         isOpen={isOfferModalOpen}
@@ -325,7 +325,7 @@ const loadData = async () => {
       </div>
 
       {/* Hero Header - Glass Card */}
-      <header className="glass-panel rounded-3xl p-8 md:p-10 text-slate-800 dark:text-white shadow-xl relative overflow-hidden group z-50">
+      <header className="glass-panel rounded-3xl p-8 md:p-10 text-slate-800 dark:text-white shadow-xl relative overflow-visible group z-50">
         <div className="absolute inset-0 bg-gradient-to-r from-brand-500/10 to-accent-neon/10 dark:from-brand-500/20 dark:to-accent-neon/20 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
         <div className="flex flex-col md:flex-row justify-between items-center gap-8 relative z-10">
           <div className="text-center md:text-left space-y-2">
@@ -358,8 +358,8 @@ const loadData = async () => {
                 <AsyncNotificationBadge userId={currentUser.id} />
               </button>
 
-              {/* Dropdown - Fixed position to avoid being cut off */}
-              <div className="fixed top-20 right-6 w-80 glass-panel bg-white/90 dark:bg-slate-900/90 rounded-3xl p-2 shadow-2xl opacity-0 invisible group-hover/notif:opacity-100 group-hover/notif:visible transition-all duration-200 z-[100]">
+              {/* Dropdown - below bell icon */}
+              <div className="absolute right-0 top-full mt-2 w-80 glass-panel bg-white/90 dark:bg-slate-900/90 rounded-3xl p-2 shadow-2xl opacity-0 invisible group-hover/notif:opacity-100 group-hover/notif:visible transition-all duration-200 z-[100]">
                 <AsyncNotificationList userId={currentUser.id} />
               </div>
             </div>
