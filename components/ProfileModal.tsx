@@ -433,12 +433,33 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
                 <div>
                   <label className="block text-xs font-bold text-slate-600 mb-1">{t.license_photo}</label>
                   <input
-                    type="text"
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-sm"
-                    placeholder="URL foto patente"
-                    value={licenseForm.photoUrl}
-                    onChange={e => setLicenseForm({ ...licenseForm, photoUrl: e.target.value })}
+                    type="file"
+                    accept="image/*"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        // Convert image to base64
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setLicenseForm({ ...licenseForm, photoUrl: reader.result as string });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
                   />
+                  {licenseForm.photoUrl && (
+                    <div className="mt-2 relative">
+                      <img src={licenseForm.photoUrl} alt="License" className="w-32 h-24 object-cover rounded-xl border border-slate-200" />
+                      <button
+                        type="button"
+                        onClick={() => setLicenseForm({ ...licenseForm, photoUrl: '' })}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full text-xs font-bold"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {licenseError && (
