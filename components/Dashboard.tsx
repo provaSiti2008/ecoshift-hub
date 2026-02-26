@@ -313,8 +313,8 @@ const loadData = async () => {
         onReviewSubmitted={() => { loadData(); }}
       />
 
-      {/* Toast Notifications - Fixed on top of everything */}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] w-full max-w-md px-4 pointer-events-none">
+      {/* Toast Notifications - Fixed on top of everything, above header */}
+      <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[99999] w-full max-w-md px-4 pointer-events-none">
         {bookingMessage && (
           <div className={`px-6 py-4 rounded-2xl shadow-2xl font-bold text-white transition-all transform animate-in slide-in-from-top duration-300 flex items-center gap-3 backdrop-blur-xl border border-white/30 pointer-events-auto ${bookingMessage.type === 'success' ? 'bg-emerald-500/90' : 'bg-rose-500/90'
             }`}>
