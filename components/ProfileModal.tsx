@@ -337,13 +337,12 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
             </div>
           </section>
 
-          {/* Driver License Section - shown for own profile */}
-          {isOwnProfile && (
+          {/* Driver License Section - shown for all users */}
           <section className="space-y-4">
             <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{t.driver_license}</h3>
             
-            {/* License Status */}
-            {driverLicense && (
+            {/* License Status - for own profile */}
+            {isOwnProfile && driverLicense && (
               <div className="bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800 rounded-2xl p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold">
@@ -365,8 +364,23 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
               </div>
             )}
 
-            {/* License Form */}
-            {!driverLicense && (
+            {/* License Status - for other users */}
+            {!isOwnProfile && driverLicense && driverLicense.status === 'verified' && (
+              <div className="bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800 rounded-2xl p-4 flex items-center gap-3">
+                <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold">
+                  ✓
+                </div>
+                <div>
+                  <p className="font-bold text-emerald-700 dark:text-emerald-300">{t.license_verified}</p>
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                    {driverLicense.category}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* License Form - only for own profile */}
+            {isOwnProfile && !driverLicense && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -441,7 +455,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
               </div>
             )}
           </section>
-          )}
 
           {/* Edit Section - only shown for own profile */}
           {isOwnProfile && (
