@@ -461,7 +461,7 @@ export const translations: Record<Language, Translations> = {
         cancel_notification: '{name} ha annullato la prenotazione per {to}.',
         trip_cancelled_notification: 'Il viaggio per {to} è stato cancellato dal driver.',
         unknown_destination: 'Destinazione sconosciuta',
-        participation_cancelled: 'Partecipazione annollata.',
+        participation_cancelled: 'Partecipazione annullata.',
         commitment_removed: 'Impegno rimosso.',
 
         footer_about: 'Chi siamo',
