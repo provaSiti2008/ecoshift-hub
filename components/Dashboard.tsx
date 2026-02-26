@@ -352,14 +352,14 @@ const loadData = async () => {
 
           <div className="flex gap-6 items-center">
             {/* Notification Bell */}
-            <div className="relative group/notif z-50">
+            <div className="relative group/notif">
               <button className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl bg-white dark:bg-slate-800 shadow-lg border border-slate-100 dark:border-slate-700 hover:scale-105 transition-transform">
                 🔔
                 <AsyncNotificationBadge userId={currentUser.id} />
               </button>
 
-              {/* Dropdown */}
-              <div className="absolute top-full right-0 mt-4 w-80 glass-panel bg-white/90 dark:bg-slate-900/90 rounded-3xl p-2 shadow-2xl opacity-0 invisible group-hover/notif:opacity-100 group-hover/notif:visible transition-all duration-200 z-[100] origin-top-right transform scale-95 group-hover/notif:scale-100">
+              {/* Dropdown - Fixed position to avoid being cut off */}
+              <div className="fixed top-20 right-6 w-80 glass-panel bg-white/90 dark:bg-slate-900/90 rounded-3xl p-2 shadow-2xl opacity-0 invisible group-hover/notif:opacity-100 group-hover/notif:visible transition-all duration-200 z-[100]">
                 <AsyncNotificationList userId={currentUser.id} />
               </div>
             </div>
