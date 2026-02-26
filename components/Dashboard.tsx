@@ -358,8 +358,8 @@ const loadData = async () => {
                 <AsyncNotificationBadge userId={currentUser.id} />
               </button>
 
-              {/* Dropdown - below bell icon */}
-              <div className="absolute right-0 top-full mt-2 w-80 glass-panel bg-white/90 dark:bg-slate-900/90 rounded-3xl p-2 shadow-2xl opacity-0 invisible group-hover/notif:opacity-100 group-hover/notif:visible transition-all duration-200 z-[100]">
+              {/* Dropdown - below bell icon, constrained to screen edges on mobile */}
+              <div className="absolute right-0 md:left-auto left-0 md:right-0 top-full mt-2 w-80 glass-panel bg-white/90 dark:bg-slate-900/90 rounded-3xl p-2 shadow-2xl opacity-0 invisible group-hover/notif:opacity-100 group-hover/notif:visible transition-all duration-200 z-[100]">
                 <AsyncNotificationList userId={currentUser.id} />
               </div>
             </div>
