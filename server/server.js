@@ -1279,67 +1279,6 @@ app.delete('/api/driver-license/:userId', async (req, res) => {
     }
 });
 
-// POST /api/contact - Send contact form email
-app.post('/api/contact', async (req, res) => {
-    try {
-        const { name, email, message } = req.body;
-
-        if (!name || !email || !message) {
-            return res.status(400).json({ error: 'Missing required fields' });
-        }
-
-        const SUPPORT_EMAIL = 'Iltuositoweb@outlook.it';
-        const BREVO_API_KEY = process.env.BREVO_API_KEY;
-
-        console.log('[Contact] Sending email from:', email, 'to:', SUPPORT_EMAIL);
-
-        if (!BREVO_API_KEY) {
-            console.log('[Contact] BREVO_API_KEY not set. Mock email:', { name, email, message });
-            return res.json({ success: true, mock: true, message: 'Email simulata (API key non configurata)' });
-        }
-
-        const htmlContent = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #059669;">📬 Nuovo messaggio da EcoShift Hub</h2>
-                <div style="background: #f8fafc; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                    <p><strong>Nome:</strong> ${name}</p>
-                    <p><strong>Email:</strong> ${email}</p>
-                    <p><strong>Messaggio:</strong></p>
-                    <p style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #059669;">${message}</p>
-                </div>
-                <p style="color: #64748b; font-size: 12px;">Inviato tramite modulo contatti EcoShift Hub</p>
-            </div>
-        `;
-
-        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'api-key': BREVO_API_KEY
-            },
-            body: JSON.stringify({
-                sender: { name: 'EcoShift Hub', email: 'aivideos.tiktok06@gmail.com' },
-                to: [{ email: SUPPORT_EMAIL, name: 'EcoShift Support' }],
-                subject: `📬 Nuovo messaggio da ${name} - EcoShift Hub`,
-                htmlContent: htmlContent
-            })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            console.error('[Contact] Brevo error:', data);
-            return res.status(500).json({ error: 'Failed to send email', details: data });
-        }
-
-        console.log('[Contact] Email sent successfully');
-        res.json({ success: true, message: 'Email inviata con successo' });
-    } catch (err) {
-        console.error('[Contact] Error:', err);
-        res.status(500).json({ error: err.message });
-    }
-});
-
 
 module.exports = app;
 
