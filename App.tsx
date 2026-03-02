@@ -10,6 +10,7 @@ import { MOCK_DRIVER_IDS } from './constants';
 import { ProfileModal } from './components/ProfileModal';
 import { AuthScreen } from './components/AuthScreen';
 import { migrateStationNames, isMigrationDone, markMigrationDone } from './migrate-stations';
+import { LegalPages, LegalPageType } from './components/LegalPages';
 
 const App: React.FC = () => {
   const { t } = useLanguage();
@@ -21,6 +22,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'pending'>('pending');
+  const [legalPage, setLegalPage] = useState<LegalPageType | null>(null);
 
   // Custom parsing for hash routing (e.g. #verify-email?token=...)
   const [currentRoute, setCurrentRoute] = useState(window.location.hash);
@@ -386,7 +388,7 @@ const App: React.FC = () => {
         currentUserId={currentUser?.id}
       />
 
-      {/* Footer */}
+      {/* Footer - Desktop */}
       <footer className="fixed bottom-0 left-0 right-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 py-3 px-4 hidden md:block">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-4">
@@ -395,13 +397,28 @@ const App: React.FC = () => {
             <span>{t.footer_copyright}</span>
           </div>
           <div className="flex items-center gap-4">
-            <a href="#about" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">{t.footer_about}</a>
-            <a href="#privacy" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">{t.footer_privacy}</a>
-            <a href="#terms" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">{t.footer_terms}</a>
-            <a href="#contact" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">{t.footer_contact}</a>
+            <button onClick={() => setLegalPage('about')} className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">{t.footer_about}</button>
+            <button onClick={() => setLegalPage('privacy')} className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">{t.footer_privacy}</button>
+            <button onClick={() => setLegalPage('terms')} className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">{t.footer_terms}</button>
+            <button onClick={() => setLegalPage('contact')} className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">{t.footer_contact}</button>
           </div>
         </div>
       </footer>
+
+      {/* Footer - Mobile */}
+      <footer className="md:hidden fixed bottom-20 left-0 right-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800 py-2 px-3">
+        <div className="flex items-center justify-center gap-3 text-[10px] text-slate-400 dark:text-slate-500">
+          <button onClick={() => setLegalPage('about')} className="hover:text-brand-500 transition-colors">{t.footer_about}</button>
+          <span className="text-slate-300">|</span>
+          <button onClick={() => setLegalPage('privacy')} className="hover:text-brand-500 transition-colors">{t.footer_privacy}</button>
+          <span className="text-slate-300">|</span>
+          <button onClick={() => setLegalPage('terms')} className="hover:text-brand-500 transition-colors">{t.footer_terms}</button>
+          <span className="text-slate-300">|</span>
+          <button onClick={() => setLegalPage('contact')} className="hover:text-brand-500 transition-colors">{t.footer_contact}</button>
+        </div>
+      </footer>
+
+      <LegalPages activePage={legalPage} onClose={() => setLegalPage(null)} />
     </div>
   );
 };

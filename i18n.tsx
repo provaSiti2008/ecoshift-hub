@@ -244,6 +244,32 @@ confirm_reset: string;
     footer_contact: string;
     footer_pnrr: string;
     footer_copyright: string;
+
+    // Legal Pages
+    about_title: string;
+    about_content: string;
+    privacy_title: string;
+    privacy_data_title: string;
+    privacy_data_desc: string;
+    privacy_usage_title: string;
+    privacy_usage_desc: string;
+    privacy_security_title: string;
+    privacy_security_desc: string;
+    privacy_rights_title: string;
+    privacy_rights_desc: string;
+    terms_title: string;
+    terms_acceptance: string;
+    terms_obligations: string;
+    terms_responsibility: string;
+    terms_limitations: string;
+    contact_title: string;
+    contact_email: string;
+    contact_form: string;
+    contact_name: string;
+    contact_email_placeholder: string;
+    contact_message: string;
+    contact_send: string;
+    contact_response_time: string;
 }
 
 // --- Translations Data ---
@@ -469,7 +495,33 @@ export const translations: Record<Language, Translations> = {
         footer_terms: 'Termini',
         footer_contact: 'Contatti',
         footer_pnrr: 'Progetto PNRR',
-        footer_copyright: '© 2025 EcoShift Hub. Tutti i diritti riservati.'
+        footer_copyright: '© 2025 EcoShift Hub. Tutti i diritti riservati.',
+
+        // Legal Pages
+        about_title: 'Chi Siamo',
+        about_content: 'EcoShift Hub è la piattaforma di mobilità smart inclusiva dedicata agli studenti universitari, finanziata nell\'ambito delle iniziative PNRR. Il nostro obiettivo è ridurre le emissioni CO2 promuovendo il carpooling universitario, collegando studenti che viaggiano sulle stesse tratte quotidiane verso il campus.',
+        privacy_title: 'Informativa Privacy',
+        privacy_data_title: 'Dati Raccolti',
+        privacy_data_desc: 'Raccogliamo i seguenti dati: nome, email universitaria, ruolo (autista/passeggero), competenze accademiche e cronologia dei viaggi.',
+        privacy_usage_title: 'Utilizzo dei Dati',
+        privacy_usage_desc: 'I dati vengono utilizzati per fornire i servizi di carpooling, matching tra utenti e migliorare l\'esperienza complessiva sulla piattaforma.',
+        privacy_security_title: 'Sicurezza',
+        privacy_security_desc: 'Implementiamo misure di sicurezza avanzate: crittografia dei dati, accesso limitato al personale autorizzato e protocolli di sicurezza aggiornati.',
+        privacy_rights_title: 'Diritti dell\'Utente',
+        privacy_rights_desc: 'Ai sensi del GDPR, hai diritto ad accedere, modificare e cancellare i tuoi dati personali. Puoi esercitare questi diritti in qualsiasi momento.',
+        terms_title: 'Termini e Condizioni',
+        terms_acceptance: 'L\'utente accetta di utilizzare l\'applicazione in modo responsabile e rispettoso verso gli altri membri della community.',
+        terms_obligations: 'Obblighi: fornire dati veritieri, mantenere un comportamento rispettoso e seguire le linee guida della community.',
+        terms_responsibility: 'Responsabilità: ogni utente è responsabile della propria sicurezza durante i viaggi. La piattaforma funge da intermediario di matching.',
+        terms_limitations: 'Ci riserviamo il diritto di sospendere o terminare account che violano i termini di servizio o adottano comportamenti inappropriati.',
+        contact_title: 'Contattaci',
+        contact_email: 'Email Supporto',
+        contact_form: 'Modulo di Contatto',
+        contact_name: 'Nome',
+        contact_email_placeholder: 'La tua email',
+        contact_message: 'Messaggio',
+        contact_send: 'Invia Messaggio',
+        contact_response_time: 'Tempo medio di risposta: 24-48 ore',
     },
     en: {
         app_name: 'EcoShift Hub',
@@ -692,7 +744,33 @@ participation_cancelled: 'Participation cancelled.',
         footer_terms: 'Terms',
         footer_contact: 'Contact',
         footer_pnrr: 'PNRR Project',
-        footer_copyright: '© 2025 EcoShift Hub. All rights reserved.'
+        footer_copyright: '© 2025 EcoShift Hub. All rights reserved.',
+
+        // Legal Pages
+        about_title: 'About Us',
+        about_content: 'EcoShift Hub is the inclusive smart mobility platform dedicated to university students, funded under the PNRR initiatives. Our goal is to reduce CO2 emissions by promoting university carpooling, connecting students who travel the same routes daily to campus.',
+        privacy_title: 'Privacy Policy',
+        privacy_data_title: 'Data Collected',
+        privacy_data_desc: 'We collect the following data: name, university email, role (driver/passenger), academic skills and travel history.',
+        privacy_usage_title: 'Data Usage',
+        privacy_usage_desc: 'Data is used to provide carpooling services, match users and improve the overall experience on the platform.',
+        privacy_security_title: 'Security',
+        privacy_security_desc: 'We implement advanced security measures: data encryption, limited access to authorized personnel and updated security protocols.',
+        privacy_rights_title: 'User Rights',
+        privacy_rights_desc: 'Under GDPR, you have the right to access, modify and delete your personal data. You can exercise these rights at any time.',
+        terms_title: 'Terms and Conditions',
+        terms_acceptance: 'The user agrees to use the application responsibly and respectfully towards other community members.',
+        terms_obligations: 'Obligations: provide truthful data, maintain respectful behavior and follow community guidelines.',
+        terms_responsibility: 'Responsibility: each user is responsible for their own safety during trips. The platform serves as a matching intermediary.',
+        terms_limitations: 'We reserve the right to suspend or terminate accounts that violate service terms or engage in inappropriate behavior.',
+        contact_title: 'Contact Us',
+        contact_email: 'Support Email',
+        contact_form: 'Contact Form',
+        contact_name: 'Name',
+        contact_email_placeholder: 'Your email',
+        contact_message: 'Message',
+        contact_send: 'Send Message',
+        contact_response_time: 'Average response time: 24-48 hours',
     },
     es: {
         app_name: 'EcoShift Hub',
@@ -915,7 +993,33 @@ participation_cancelled: 'Participación cancelada.',
         footer_terms: 'Términos',
         footer_contact: 'Contacto',
         footer_pnrr: 'Proyecto PNRR',
-        footer_copyright: '© 2025 EcoShift Hub. Todos los derechos reservados.'
+        footer_copyright: '© 2025 EcoShift Hub. Todos los derechos reservados.',
+
+        // Legal Pages
+        about_title: 'Quiénes Somos',
+        about_content: 'EcoShift Hub es la plataforma de movilidad inteligente inclusiva dedicada a estudiantes universitarios, financiada bajo las iniciativas PNRR. Nuestro objetivo es reducir las emisiones de CO2 promoviendo el carpooling universitario, conectando estudiantes que viajan las mismas rutas diarias al campus.',
+        privacy_title: 'Política de Privacidad',
+        privacy_data_title: 'Datos Recopilados',
+        privacy_data_desc: 'Recopilamos los siguientes datos: nombre, correo electrónico universitario, rol (conductor/pasajero), habilidades académicas e historial de viajes.',
+        privacy_usage_title: 'Uso de Datos',
+        privacy_usage_desc: 'Los datos se utilizan para proporcionar servicios de carpooling, emparejar usuarios y mejorar la experiencia general en la plataforma.',
+        privacy_security_title: 'Seguridad',
+        privacy_security_desc: 'Implementamos medidas de seguridad avanzadas: cifrado de datos, acceso limitado al personal autorizado y protocolos de seguridad actualizados.',
+        privacy_rights_title: 'Derechos del Usuario',
+        privacy_rights_desc: 'Bajo el GDPR, tienes derecho a acceder, modificar y eliminar tus datos personales. Puedes ejercer estos derechos en cualquier momento.',
+        terms_title: 'Términos y Condiciones',
+        terms_acceptance: 'El usuario acepta usar la aplicación de manera responsable y respetuosa con los demás miembros de la comunidad.',
+        terms_obligations: 'Obligaciones: proporcionar datos veraces, mantener un comportamiento respetuoso y seguir las pautas de la comunidad.',
+        terms_responsibility: 'Responsabilidad: cada usuario es responsable de su propia seguridad durante los viajes. La plataforma funciona como intermediario de emparejamiento.',
+        terms_limitations: 'Nos reservamos el derecho de suspender o terminar cuentas que violen los términos de servicio o adopten comportamientos inapropiados.',
+        contact_title: 'Contáctanos',
+        contact_email: 'Email de Soporte',
+        contact_form: 'Formulario de Contacto',
+        contact_name: 'Nombre',
+        contact_email_placeholder: 'Tu email',
+        contact_message: 'Mensaje',
+        contact_send: 'Enviar Mensaje',
+        contact_response_time: 'Tiempo promedio de respuesta: 24-48 horas',
     },
     fr: {
         app_name: 'EcoShift Hub',
@@ -1138,7 +1242,33 @@ participation_cancelled: 'Participation annulée.',
         footer_terms: 'Conditions',
         footer_contact: 'Contact',
         footer_pnrr: 'Projet PNRR',
-        footer_copyright: '© 2025 EcoShift Hub. Tous droits réservés.'
+        footer_copyright: '© 2025 EcoShift Hub. Tous droits réservés.',
+
+        // Legal Pages
+        about_title: 'À Propos',
+        about_content: 'EcoShift Hub est la plateforme de mobilité intelligente inclusive dédiée aux étudiants universitaires, financée dans le cadre des initiatives PNRR. Notre objectif est de réduire les émissions de CO2 en promouvant le covoiturage universitaire, en connectant les étudiants qui parcourent les mêmes trajets quotidiens vers le campus.',
+        privacy_title: 'Politique de Confidentialité',
+        privacy_data_title: 'Données Collectées',
+        privacy_data_desc: 'Nous collectons les données suivantes: nom, email universitaire, rôle (conducteur/passager), compétences académiques et historique des voyages.',
+        privacy_usage_title: 'Utilisation des Données',
+        privacy_usage_desc: 'Les données sont utilisées pour fournir les services de covoiturage, mettre en correspondance les utilisateurs et améliorer l\'expérience globale sur la plateforme.',
+        privacy_security_title: 'Sécurité',
+        privacy_security_desc: 'Nous mettons en œuvre des mesures de sécurité avancées: chiffrement des données, accès limité au personnel autorisé et protocoles de sécurité mis à jour.',
+        privacy_rights_title: 'Droits de l\'Utilisateur',
+        privacy_rights_desc: 'Conformément au RGPD, vous avez le droit d\'accéder, de modifier et de supprimer vos données personnelles. Vous pouvez exercer ces droits à tout moment.',
+        terms_title: 'Conditions Générales',
+        terms_acceptance: 'L\'utilisateur s\'engage à utiliser l\'application de manière responsable et respectueuse envers les autres membres de la communauté.',
+        terms_obligations: 'Obligations: fournir des données véridiques, maintenir un comportement respectueux et suivre les directives de la communauté.',
+        terms_responsibility: 'Responsabilité: chaque utilisateur est responsable de sa propre sécurité pendant les voyages. La plateforme sert d\'intermédiaire de mise en correspondance.',
+        terms_limitations: 'Nous nous réservons le droit de suspendre ou de résilier les comptes qui violent les conditions d\'utilisation ou adoptent des comportements inappropriés.',
+        contact_title: 'Contactez-nous',
+        contact_email: 'Email de Support',
+        contact_form: 'Formulaire de Contact',
+        contact_name: 'Nom',
+        contact_email_placeholder: 'Votre email',
+        contact_message: 'Message',
+        contact_send: 'Envoyer le Message',
+        contact_response_time: 'Temps de réponse moyen: 24-48 heures',
     },
     de: {
         app_name: 'EcoShift Hub',
@@ -1361,7 +1491,33 @@ participation_cancelled: 'Teilnahme storniert.',
         footer_terms: 'AGB',
         footer_contact: 'Kontakt',
         footer_pnrr: 'PNRR Projekt',
-        footer_copyright: '© 2025 EcoShift Hub. Alle Rechte vorbehalten.'
+        footer_copyright: '© 2025 EcoShift Hub. Alle Rechte vorbehalten.',
+
+        // Legal Pages
+        about_title: 'Über Uns',
+        about_content: 'EcoShift Hub ist die Plattform für inklusive intelligente Mobilität für Universitätsstudierende, die im Rahmen der PNRR-Initiativen finanziert wird. Unser Ziel ist es, CO2-Emissionen durch die Förderung von universitärem Fahrgemeinschaften zu reduzieren und Studierende zu verbinden, die täglich dieselben Strecken zum Campus zurücklegen.',
+        privacy_title: 'Datenschutzrichtlinie',
+        privacy_data_title: 'Erhobene Daten',
+        privacy_data_desc: 'Wir erheben folgende Daten: Name, Uni-E-Mail, Rolle (Fahrer/Mitfahrer), akademische Fähigkeiten und Reiseverlauf.',
+        privacy_usage_title: 'Datennutzung',
+        privacy_usage_desc: 'Die Daten werden verwendet, um Fahrgemeinschaftsdienste bereitzustellen, Nutzer zu vermitteln und die Gesamterfahrung auf der Plattform zu verbessern.',
+        privacy_security_title: 'Sicherheit',
+        privacy_security_desc: 'Wir implementieren erweiterte Sicherheitsmaßnahmen: Datenverschlüsselung, eingeschränkter Zugang für autorisiertes Personal und aktualisierte Sicherheitsprotokolle.',
+        privacy_rights_title: 'Benutzerrechte',
+        privacy_rights_desc: 'Gemäß DSGVO haben Sie das Recht, auf Ihre persönlichen Daten zuzugreifen, diese zu ändern und zu löschen. Sie können diese Rechte jederzeit ausüben.',
+        terms_title: 'Nutzungsbedingungen',
+        terms_acceptance: 'Der Benutzer verpflichtet sich, die Anwendung verantwortungsvoll und respektvoll gegenüber anderen Community-Mitgliedern zu nutzen.',
+        terms_obligations: 'Verpflichtungen: Wahrheitsgemäße Daten angeben, respektvolles Verhalten zeigen und Community-Richtlinien befolgen.',
+        terms_responsibility: 'Verantwortung: Jeder Benutzer ist für seine eigene Sicherheit während der Reisen verantwortlich. Die Plattform dient als Vermittler.',
+        terms_limitations: 'Wir behalten uns das Recht vor, Konten zu sperren oder zu kündigen, die gegen die Nutzungsbedingungen verstoßen oder unangemessenes Verhalten zeigen.',
+        contact_title: 'Kontakt',
+        contact_email: 'Support-E-Mail',
+        contact_form: 'Kontaktformular',
+        contact_name: 'Name',
+        contact_email_placeholder: 'Ihre E-Mail',
+        contact_message: 'Nachricht',
+        contact_send: 'Nachricht Senden',
+        contact_response_time: 'Durchschnittliche Antwortzeit: 24-48 Stunden',
     },
     nl: {
         app_name: 'EcoShift Hub',
@@ -1584,7 +1740,33 @@ participation_cancelled: 'Deelname geannuleerd.',
         footer_terms: 'Voorwaarden',
         footer_contact: 'Contact',
         footer_pnrr: 'PNRR Project',
-        footer_copyright: '© 2025 EcoShift Hub. Alle rechten voorbehouden.'
+        footer_copyright: '© 2025 EcoShift Hub. Alle rechten voorbehouden.',
+
+        // Legal Pages
+        about_title: 'Over Ons',
+        about_content: 'EcoShift Hub is het platform voor inclusieve slimme mobiliteit voor universiteitsstudenten, gefinancierd binnen de PNRR-initiatieven. Ons doel is het verminderen van CO2-emissies door het bevorderen van universitaire carpooling, het verbinden van studenten die dagelijks dezelfde routes naar de campus afleggen.',
+        privacy_title: 'Privacybeleid',
+        privacy_data_title: 'Verzamelde Gegevens',
+        privacy_data_desc: 'We verzamelen de volgende gegevens: naam, universiteits-e-mail, rol (chauffeur/passagier), academische vaardigheden en reisgeschiedenis.',
+        privacy_usage_title: 'Gebruik van Gegevens',
+        privacy_usage_desc: 'Gegevens worden gebruikt om carpoolingdiensten te verlenen, gebruikers te koppelen en de algehele ervaring op het platform te verbeteren.',
+        privacy_security_title: 'Beveiliging',
+        privacy_security_desc: 'We implementeren geavanceerde beveiligingsmaatregelen: gegevensversleuteling, beperkte toegang voor bevoegd personeel en bijgewerkte beveiligingsprotocollen.',
+        privacy_rights_title: 'Gebruikersrechten',
+        privacy_rights_desc: 'Onder de AVG heb je het recht om je persoonlijke gegevens in te zien, te wijzigen en te verwijderen. Je kunt deze rechten op elk moment uitoefenen.',
+        terms_title: 'Algemene Voorwaarden',
+        terms_acceptance: 'De gebruiker gaat akkoord met het verantwoordelijk en respectvol gebruiken van de applicatie ten opzichte van andere community-leden.',
+        terms_obligations: 'Verplichtingen: verstrek waarheidsgetrouwe gegevens, handhaaf respectvol gedrag en volg community-richtlijnen.',
+        terms_responsibility: 'Verantwoordelijkheid: elke gebruiker is verantwoordelijk voor zijn eigen veiligheid tijdens reizen. Het platform fungeert als bemiddelaar.',
+        terms_limitations: 'We behouden ons het recht voor om accounts te schorsen of te beëindigen die de servicevoorwaarden schenden of ongepast gedrag vertonen.',
+        contact_title: 'Neem Contact Op',
+        contact_email: 'Ondersteuningsmail',
+        contact_form: 'Contactformulier',
+        contact_name: 'Naam',
+        contact_email_placeholder: 'Jouw email',
+        contact_message: 'Bericht',
+        contact_send: 'Verstuur Bericht',
+        contact_response_time: 'Gemiddelde reactietijd: 24-48 uur',
     }
 };
 
