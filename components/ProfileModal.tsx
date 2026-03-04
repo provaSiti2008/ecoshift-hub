@@ -170,12 +170,26 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
 
   const renderStars = (rating: number) => {
     const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = (rating % 1) >= 0.5;
+    
     for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <span key={i} className={i <= rating ? 'text-amber-400' : 'text-slate-300 dark:text-slate-600'}>
-          ★
-        </span>
-      );
+      if (i <= fullStars) {
+        stars.push(
+          <span key={i} className="text-amber-400">★</span>
+        );
+      } else if (i === fullStars + 1 && hasHalfStar) {
+        stars.push(
+          <span key={i} className="text-amber-400" style={{ position: 'relative' }}>
+            <span style={{ position: 'absolute', left: 0, width: '50%', overflow: 'hidden' }}>★</span>
+            <span className="text-slate-300 dark:text-slate-600">★</span>
+          </span>
+        );
+      } else {
+        stars.push(
+          <span key={i} className="text-slate-300 dark:text-slate-600">★</span>
+        );
+      }
     }
     return stars;
   };
@@ -288,7 +302,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
               </div>
               <div className="flex flex-col">
                 <div className="flex">
-                  {userRating.rating ? renderStars(Math.round(userRating.rating)) : (
+                  {userRating.rating ? renderStars(userRating.rating) : (
                     <span className="text-slate-400 text-sm">Nessuna valutazione</span>
                   )}
                 </div>
@@ -581,7 +595,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
               </div>
               <div className="flex flex-col">
                 <div className="flex">
-                  {userRating.rating ? renderStars(Math.round(userRating.rating)) : (
+                  {userRating.rating ? renderStars(userRating.rating) : (
                     <span className="text-slate-400 text-sm">Nessuna valutazione</span>
                   )}
                 </div>
