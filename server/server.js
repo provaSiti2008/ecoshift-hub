@@ -1070,11 +1070,18 @@ app.get('/api/users/:id/trips-stats', async (req, res) => {
         
         const allTrips = await db.query(tripsSql);
         
+        // Get completed trips history
+        const historySql = isPostgres
+            ? 'SELECT * FROM completed_trips_history WHERE user_id = ?'
+            : 'SELECT * FROM completed_trips_history WHERE user_id = ?';
+        const historyTrips = await db.query(historySql, [userId]);
+        
         let totalAsDriver = 0;
         let totalAsPassenger = 0;
         let totalCo2Saved = 0;
         let totalDistanceKm = 0;
         
+        // Process current trips in DB
         for (const trip of allTrips) {
             const passengerIds = JSON.parse(trip.passengerIds || '[]');
             const isDriver = trip.driverId === userId;
@@ -1104,6 +1111,17 @@ app.get('/api/users/:id/trips-stats', async (req, res) => {
             }
         }
         
+        // Add stats from completed trips history (these are already calculated)
+        for (const h of historyTrips) {
+            if (h.role === 'driver') {
+                totalAsDriver++;
+            } else if (h.role === 'passenger') {
+                totalAsPassenger++;
+            }
+            totalCo2Saved += (h.co2_saved || 0);
+            totalDistanceKm += (h.distance_km || 0);
+        }
+        
         res.json({
             totalAsDriver,
             totalAsPassenger,
@@ -1130,7 +1148,13 @@ app.get('/api/users/:id/completed-trips', async (req, res) => {
         
         const allTrips = await db.query(tripsSql);
         
-        // Filter trips where user participated
+        // Get completed trips history
+        const historySql = isPostgres
+            ? 'SELECT * FROM completed_trips_history WHERE user_id = ? ORDER BY completed_at DESC'
+            : 'SELECT * FROM completed_trips_history WHERE user_id = ? ORDER BY completed_at DESC';
+        const historyTrips = await db.query(historySql, [userId]);
+        
+        // Filter trips where user participated (from main trips table)
         const userTrips = [];
         for (const trip of allTrips) {
             const passengerIds = JSON.parse(trip.passengerIds || '[]');
@@ -1138,6 +1162,9 @@ app.get('/api/users/:id/completed-trips', async (req, res) => {
             const isPassenger = passengerIds.includes(userId);
             
             if (isDriver || isPassenger) {
+                // Check if already in history
+                if (historyTrips.some(h => h.trip_id === trip.id)) continue;
+                
                 // Calcola distanza e CO2 REALI
                 const realDistance = getRealDistance(trip.fromLoc, trip.toLoc);
                 const distanceKm = realDistance !== null ? realDistance : (trip.distanceKm || 0);
@@ -1154,13 +1181,34 @@ app.get('/api/users/:id/completed-trips', async (req, res) => {
             }
         }
         
+        // Add trips from history
+        const historyAsTrips = historyTrips.map(h => ({
+            id: h.trip_id,
+            driverId: h.driver_id,
+            driverName: h.driver_name,
+            from: h.from_loc,
+            to: h.to_loc,
+            departureTime: h.departure_time,
+            seatsAvailable: 0,
+            assistanceOffered: false,
+            distanceKm: h.distance_km,
+            co2Saved: h.co2_saved,
+            role: h.role,
+            completedAt: h.completed_at
+        }));
+        
+        // Combine and sort by departure time
+        const allUserTrips = [...userTrips, ...historyAsTrips].sort((a, b) => 
+            new Date(b.departureTime).getTime() - new Date(a.departureTime).getTime()
+        );
+        
         // Apply pagination
-        const paginatedTrips = userTrips.slice(offset, offset + limit);
+        const paginatedTrips = allUserTrips.slice(offset, offset + limit);
         
         res.json({
             trips: paginatedTrips,
-            total: userTrips.length,
-            hasMore: offset + limit < userTrips.length
+            total: allUserTrips.length,
+            hasMore: offset + limit < allUserTrips.length
         });
     } catch (err) {
         console.error('[Completed Trips] Error:', err);
@@ -1340,6 +1388,207 @@ app.post('/api/contact', async (req, res) => {
     }
 });
 
+
+// --- Completed Trips History ---
+
+// POST /api/completed-trips - Save trip to history when it expires
+app.post('/api/completed-trips', async (req, res) => {
+    const { tripId, userId, role } = req.body;
+    
+    if (!tripId || !userId || !role) {
+        return res.status(400).json({ error: 'Missing required fields: tripId, userId, role' });
+    }
+    
+    try {
+        // Get trip details
+        const tripSql = isPostgres
+            ? 'SELECT * FROM trips WHERE id = ?'
+            : 'SELECT * FROM trips WHERE id = ?';
+        const trips = await db.query(tripSql, [tripId]);
+        
+        if (trips.length === 0) {
+            return res.status(404).json({ error: 'Trip not found' });
+        }
+        
+        const trip = trips[0];
+        const completedAt = new Date().toISOString();
+        const canReviewUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 days
+        
+        // Calculate real distance and CO2
+        const realDistance = getRealDistance(trip.fromLoc, trip.toLoc);
+        const distanceKm = realDistance !== null ? realDistance : (trip.distanceKm || 0);
+        const co2Saved = distanceKm * 0.21;
+        
+        // Check if already exists
+        const checkSql = isPostgres
+            ? 'SELECT id FROM completed_trips_history WHERE trip_id = ? AND user_id = ?'
+            : 'SELECT id FROM completed_trips_history WHERE trip_id = ? AND user_id = ?';
+        const existing = await db.query(checkSql, [tripId, userId]);
+        
+        if (existing.length > 0) {
+            return res.json({ success: true, message: 'Already in history' });
+        }
+        
+        // Insert into history
+        const insertSql = isPostgres
+            ? `INSERT INTO completed_trips_history (id, user_id, role, trip_id, driver_id, driver_name, from_loc, to_loc, departure_time, distance_km, co2_saved, completed_at, can_review_until) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+            : `INSERT INTO completed_trips_history (id, user_id, role, trip_id, driver_id, driver_name, from_loc, to_loc, departure_time, distance_km, co2_saved, completed_at, can_review_until) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        
+        const id = `cth_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
+        await db.query(insertSql, [
+            id, userId, role, tripId, trip.driverId, trip.driverName,
+            trip.fromLoc, trip.toLoc, trip.departureTime,
+            distanceKm, co2Saved, completedAt, canReviewUntil
+        ]);
+        
+        console.log(`[Completed Trips] Saved trip ${tripId} to history for user ${userId}`);
+        res.json({ success: true, id });
+    } catch (err) {
+        console.error('[Completed Trips] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET /api/users/:id/completed-trips-history - Get user's completed trips history
+app.get('/api/users/:id/completed-trips-history', async (req, res) => {
+    const userId = req.params.id;
+    
+    try {
+        const sql = isPostgres
+            ? 'SELECT * FROM completed_trips_history WHERE user_id = ? ORDER BY completed_at DESC'
+            : 'SELECT * FROM completed_trips_history WHERE user_id = ? ORDER BY completed_at DESC';
+        
+        const history = await db.query(sql, [userId]);
+        res.json({ trips: history });
+    } catch (err) {
+        console.error('[Completed Trips History] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// PUT /api/completed-trips/:id/review - Mark that review was submitted
+app.put('/api/completed-trips/:id/review', async (req, res) => {
+    const historyId = req.params.id;
+    
+    try {
+        const sql = isPostgres
+            ? 'UPDATE completed_trips_history SET review_submitted_at = ? WHERE id = ?'
+            : 'UPDATE completed_trips_history SET review_submitted_at = ? WHERE id = ?';
+        
+        const now = new Date().toISOString();
+        await db.query(sql, [now, historyId]);
+        
+        console.log(`[Completed Trips] Review marked for ${historyId}`);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('[Completed Trips Review] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// DELETE /api/completed-trips/:id/cleanup - Clean up trip and chat
+app.delete('/api/completed-trips/:id/cleanup', async (req, res) => {
+    const historyId = req.params.id;
+    
+    try {
+        // Get the history entry to find trip_id
+        const getSql = isPostgres
+            ? 'SELECT * FROM completed_trips_history WHERE id = ?'
+            : 'SELECT * FROM completed_trips_history WHERE id = ?';
+        const historyEntries = await db.query(getSql, [historyId]);
+        
+        if (historyEntries.length === 0) {
+            return res.status(404).json({ error: 'History entry not found' });
+        }
+        
+        const history = historyEntries[0];
+        const tripId = history.trip_id;
+        
+        // Mark as cleanup done
+        const updateSql = isPostgres
+            ? 'UPDATE completed_trips_history SET cleanup_done = 1 WHERE id = ?'
+            : 'UPDATE completed_trips_history SET cleanup_done = 1 WHERE id = ?';
+        await db.query(updateSql, [historyId]);
+        
+        // Delete trip
+        const deleteTripSql = isPostgres
+            ? 'DELETE FROM trips WHERE id = ?'
+            : 'DELETE FROM trips WHERE id = ?';
+        await db.query(deleteTripSql, [tripId]);
+        console.log(`[Cleanup] Deleted trip ${tripId}`);
+        
+        // Delete messages for this trip
+        const deleteMessagesSql = isPostgres
+            ? 'DELETE FROM messages WHERE "tripId" = ?'
+            : 'DELETE FROM messages WHERE tripId = ?';
+        await db.query(deleteMessagesSql, [tripId]);
+        console.log(`[Cleanup] Deleted messages for trip ${tripId}`);
+        
+        // Delete attachments
+        const deleteAttachmentsSql = isPostgres
+            ? 'DELETE FROM attachments WHERE messageid IN (SELECT id FROM messages WHERE "tripId" = ?)'
+            : 'DELETE FROM attachments WHERE messageid IN (SELECT id FROM messages WHERE tripId = ?)';
+        await db.query(deleteAttachmentsSql, [tripId]);
+        
+        res.json({ success: true });
+    } catch (err) {
+        console.error('[Cleanup] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET /api/completed-trips/cleanup-candidates - Get trips that need cleanup (7 days passed or review submitted)
+app.get('/api/completed-trips/cleanup-candidates', async (req, res) => {
+    try {
+        const now = new Date().toISOString();
+        
+        const sql = isPostgres
+            ? `SELECT * FROM completed_trips_history 
+               WHERE cleanup_done = 0 
+               AND (
+                   (review_submitted_at IS NOT NULL) 
+                   OR (can_review_until < ?)
+               )`
+            : `SELECT * FROM completed_trips_history 
+               WHERE cleanup_done = 0 
+               AND (
+                   (review_submitted_at IS NOT NULL) 
+                   OR (can_review_until < ?)
+               )`;
+        
+        const candidates = await db.query(sql, [now]);
+        res.json({ candidates });
+    } catch (err) {
+        console.error('[Cleanup Candidates] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET /api/completed-trips/stats/:userId - Get stats from completed trips history
+app.get('/api/completed-trips/stats/:userId', async (req, res) => {
+    const userId = req.params.userId;
+    
+    try {
+        const sql = isPostgres
+            ? 'SELECT * FROM completed_trips_history WHERE user_id = ?'
+            : 'SELECT * FROM completed_trips_history WHERE user_id = ?';
+        
+        const history = await db.query(sql, [userId]);
+        
+        const stats = {
+            totalAsDriver: history.filter(h => h.role === 'driver').length,
+            totalAsPassenger: history.filter(h => h.role === 'passenger').length,
+            totalDistanceKm: history.reduce((sum, h) => sum + (h.distance_km || 0), 0),
+            totalCo2Saved: history.reduce((sum, h) => sum + (h.co2_saved || 0), 0)
+        };
+        
+        res.json(stats);
+    } catch (err) {
+        console.error('[Completed Trips Stats] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
 
 module.exports = app;
 

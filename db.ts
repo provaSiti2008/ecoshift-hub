@@ -520,6 +520,83 @@ async getRealTimeDepartures(stationId: string, time?: Date): Promise<any[]> {
       return { success: false };
     }
   }
+
+  // --- Completed Trips History ---
+
+  async saveCompletedTrip(tripId: string, userId: string, role: 'driver' | 'passenger'): Promise<{ success: boolean; id?: string }> {
+    try {
+      const res = await fetch(`${API_URL}/completed-trips`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tripId, userId, role })
+      });
+      if (!res.ok) return { success: false };
+      const data = await res.json();
+      return { success: true, id: data.id };
+    } catch (err) {
+      console.error('Error saving completed trip:', err);
+      return { success: false };
+    }
+  }
+
+  async getCompletedTripsHistory(userId: string): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_URL}/users/${userId}/completed-trips-history`);
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.trips || [];
+    } catch (err) {
+      console.error('Error fetching completed trips history:', err);
+      return [];
+    }
+  }
+
+  async markReviewSubmitted(historyId: string): Promise<boolean> {
+    try {
+      const res = await fetch(`${API_URL}/completed-trips/${historyId}/review`, {
+        method: 'PUT'
+      });
+      return res.ok;
+    } catch (err) {
+      console.error('Error marking review submitted:', err);
+      return false;
+    }
+  }
+
+  async cleanupTrip(historyId: string): Promise<boolean> {
+    try {
+      const res = await fetch(`${API_URL}/completed-trips/${historyId}/cleanup`, {
+        method: 'DELETE'
+      });
+      return res.ok;
+    } catch (err) {
+      console.error('Error cleaning up trip:', err);
+      return false;
+    }
+  }
+
+  async getCleanupCandidates(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_URL}/completed-trips/cleanup-candidates`);
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.candidates || [];
+    } catch (err) {
+      console.error('Error fetching cleanup candidates:', err);
+      return [];
+    }
+  }
+
+  async getCompletedTripsStats(userId: string): Promise<{ totalAsDriver: number; totalAsPassenger: number; totalDistanceKm: number; totalCo2Saved: number }> {
+    try {
+      const res = await fetch(`${API_URL}/completed-trips/stats/${userId}`);
+      if (!res.ok) return { totalAsDriver: 0, totalAsPassenger: 0, totalDistanceKm: 0, totalCo2Saved: 0 };
+      return await res.json();
+    } catch (err) {
+      console.error('Error fetching completed trips stats:', err);
+      return { totalAsDriver: 0, totalAsPassenger: 0, totalDistanceKm: 0, totalCo2Saved: 0 };
+    }
+  }
 }
 
 export const db = new MamaDB();

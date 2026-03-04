@@ -79,16 +79,50 @@ const App: React.FC = () => {
           markMigrationDone();
         }
 
-        // 1. Archiviazione automatica viaggi scaduti (pulizia del database)
+        // 1. Salva viaggi scaduti nello storico (se non già salvati)
         const allTrips = await db.getTrips();
         const now = new Date();
-        const expiredTrips = allTrips.filter(t => new Date(t.departureTime) < now);
+        const expiredTrips = allTrips.filter(t => {
+          if (MOCK_DRIVER_IDS.includes(t.driverId)) return false;
+          return new Date(t.departureTime) < now;
+        });
+        
         for (const trip of expiredTrips) {
-          await db.deleteTrip(trip.id);
-          console.log(`[App] Viaggio scaduto archiviato e rimosso: ${trip.id}`);
+          // Salva per il driver
+          const driverRole = 'driver';
+          await db.saveCompletedTrip(trip.id, trip.driverId, driverRole);
+          
+          // Salva per ogni passeggero
+          let passengerIds: string[] = [];
+          if (Array.isArray(trip.passengerIds)) {
+            passengerIds = trip.passengerIds;
+          } else if (trip.passengerIds) {
+            try {
+              passengerIds = JSON.parse(trip.passengerIds);
+            } catch (e) {
+              passengerIds = [];
+            }
+          }
+          for (const passengerId of passengerIds) {
+            await db.saveCompletedTrip(trip.id, passengerId, 'passenger');
+          }
+          
+          console.log(`[App] Viaggio scaduto salvato nello storico: ${trip.id}`);
         }
 
-        // 2. Archiviazione automatica gruppi di studio scaduti
+        // 2. Cleanup: elimina viaggi scaduti da più di 7 giorni o con recensione
+        const cleanupCandidates = await db.getCleanupCandidates();
+        for (const candidate of cleanupCandidates) {
+          const canCleanup = candidate.review_submitted_at || 
+            new Date(candidate.can_review_until) < now;
+          
+          if (canCleanup) {
+            await db.cleanupTrip(candidate.id);
+            console.log(`[App] Cleanup eseguito per: ${candidate.trip_id}`);
+          }
+        }
+
+        // 3. Archiviazione automatica gruppi di studio scaduti
         const allGroups = await db.getStudyGroups();
         const expiredGroups = allGroups.filter(g => {
           // Se departureTime è in formato orario (es. "14:30"), confronta con l'orario corrente

@@ -98,8 +98,10 @@ const [searchQuery, setSearchQuery] = useState<string>('');
   const [subjectFilter, setSubjectFilter] = useState<string>('all');
   const [accessibilityOnly, setAccessibilityOnly] = useState<boolean>(false);
   const [completedTrips, setCompletedTrips] = useState<Trip[]>([]);
+  const [completedTripsHistory, setCompletedTripsHistory] = useState<any[]>([]);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedReviewTrip, setSelectedReviewTrip] = useState<Trip | null>(null);
+  const [selectedReviewHistoryId, setSelectedReviewHistoryId] = useState<string | null>(null);
 
   // Listener per la sincronizzazione del database
   useEffect(() => {
@@ -113,9 +115,10 @@ const [searchQuery, setSearchQuery] = useState<string>('');
   }, []);
 
 const loadData = async () => {
-    const [allTrips, allGroups] = await Promise.all([
+    const [allTrips, allGroups, historyTrips] = await Promise.all([
       db.getTrips(),
-      db.getStudyGroups()
+      db.getStudyGroups(),
+      db.getCompletedTripsHistory(currentUser.id)
     ]);
     const now = new Date();
     // Filtro doppio: rimuove demo E viaggi scaduti
@@ -123,13 +126,39 @@ const loadData = async () => {
       .filter(t => !MOCK_DRIVER_IDS.includes(t.driverId))
       .filter(t => new Date(t.departureTime) >= now); // Nasconde viaggi scaduti
 
-    // Completed trips where current user was driver or passenger
+    // Completed trips from history where user can still review (within 7 days and no review submitted)
+    const reviewableHistory = historyTrips.filter(h => {
+      if (h.review_submitted_at) return false; // Already reviewed
+      if (new Date(h.can_review_until) < now) return false; // More than 7 days passed
+      return true;
+    });
+    
+    // Convert history to Trip format for display
+    const completedFromHistory: Trip[] = reviewableHistory.map(h => ({
+      id: h.trip_id,
+      driverId: h.driver_id,
+      driverName: h.driver_name || 'Unknown',
+      from: h.from_loc,
+      to: h.to_loc,
+      departureTime: h.departure_time,
+      seatsAvailable: 0,
+      assistanceOffered: false,
+      passengerIds: []
+    }));
+    
+    // Also get past trips that are still in the main table (not yet in history)
     const pastTrips = allTrips
       .filter(t => !MOCK_DRIVER_IDS.includes(t.driverId))
       .filter(t => new Date(t.departureTime) < now) // Solo viaggi passati
       .filter(t => t.driverId === currentUser.id || (t.passengerIds && t.passengerIds.includes(currentUser.id))); // Solo se partecipante
     
-    const completedSorted = pastTrips.sort((a, b) => new Date(b.departureTime).getTime() - new Date(a.departureTime).getTime());
+    // Combine: history trips + current trips in the main DB that are past but not yet saved to history
+    const mainDbPastTrips = pastTrips.filter(pt => 
+      !historyTrips.some(h => h.trip_id === pt.id)
+    );
+    
+    const allCompleted = [...completedFromHistory, ...mainDbPastTrips];
+    const completedSorted = allCompleted.sort((a, b) => new Date(b.departureTime).getTime() - new Date(a.departureTime).getTime());
 
     // Filtro per gruppi di studio: rimuove demo e gestisce formato orario (HH:MM)
     const realGroups = allGroups
@@ -148,6 +177,7 @@ const loadData = async () => {
     const sortedTrips = realTrips.sort((a, b) => new Date(a.departureTime).getTime() - new Date(b.departureTime).getTime());
     setTrips(sortedTrips);
     setCompletedTrips(completedSorted);
+    setCompletedTripsHistory(historyTrips);
     setStudyGroups(realGroups);
     setLastSync(new Date());
   };
@@ -307,10 +337,11 @@ const loadData = async () => {
       />
       <ReviewModal
         isOpen={reviewModalOpen}
-        onClose={() => { setReviewModalOpen(false); setSelectedReviewTrip(null); }}
+        onClose={() => { setReviewModalOpen(false); setSelectedReviewTrip(null); setSelectedReviewHistoryId(null); }}
         trip={selectedReviewTrip!}
         currentUser={currentUser}
         onReviewSubmitted={() => { loadData(); }}
+        historyId={selectedReviewHistoryId}
       />
 
       {/* Toast Notifications - Fixed on top of everything, above header */}
@@ -543,7 +574,10 @@ const loadData = async () => {
                   <span className="bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 text-xs px-2.5 py-1 rounded-full font-bold">{completedTrips.length}</span>
                 </h2>
                 <div className="grid grid-cols-1 gap-3">
-                  {completedTrips.slice(0, 10).map((trip) => (
+                  {completedTrips.slice(0, 10).map((trip) => {
+                    const historyEntry = completedTripsHistory.find(h => h.trip_id === trip.id);
+                    const historyId = historyEntry?.id || null;
+                    return (
                     <div key={trip.id} className="glass-panel p-4 rounded-2xl flex items-center justify-between">
                       <div className="flex-1">
                         <p className="font-bold text-slate-800 dark:text-white text-sm">
@@ -555,13 +589,13 @@ const loadData = async () => {
                         </p>
                       </div>
                       <button
-                        onClick={() => { setSelectedReviewTrip(trip); setReviewModalOpen(true); }}
+                        onClick={() => { setSelectedReviewTrip(trip); setSelectedReviewHistoryId(historyId); setReviewModalOpen(true); }}
                         className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all"
                       >
                         ⭐ {t.leave_review || 'Recensione'}
                       </button>
-                    </div>
-                  ))}
+                    </div>);
+                  })}
                 </div>
               </div>
             )}

@@ -10,6 +10,7 @@ interface ReviewModalProps {
   trip: Trip;
   currentUser: User;
   onReviewSubmitted: () => void;
+  historyId?: string | null;
 }
 
 interface Participant {
@@ -24,7 +25,8 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
   onClose,
   trip,
   currentUser,
-  onReviewSubmitted
+  onReviewSubmitted,
+  historyId
 }) => {
   const { t } = useLanguage();
   const [rating, setRating] = useState(0);
@@ -116,6 +118,10 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
     const result = await db.createReview(review);
 
     if (result.ok) {
+      // Mark review as submitted in history if we have a historyId
+      if (historyId) {
+        await db.markReviewSubmitted(historyId);
+      }
       onReviewSubmitted();
       onClose();
     } else {
