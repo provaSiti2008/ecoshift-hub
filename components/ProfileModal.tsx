@@ -334,6 +334,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
                             <div className="flex">{renderStars(review.rating)}</div>
+                            <span className="text-xs font-bold text-amber-500">({review.rating})</span>
                             <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{review.reviewerName}</span>
                           </div>
                           <span className="text-[10px] text-slate-400">
