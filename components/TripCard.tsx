@@ -90,26 +90,13 @@ export const TripCard: React.FC<TripCardProps> = ({
   const renderStars = (rating: number | null | undefined) => {
     if (!rating) return null;
     const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = (rating % 1) >= 0.5;
-    
+    const fullStars = Math.round(rating);
     for (let i = 1; i <= 5; i++) {
-      if (i <= fullStars) {
-        stars.push(
-          <span key={i} className="text-amber-400">★</span>
-        );
-      } else if (i === fullStars + 1 && hasHalfStar) {
-        stars.push(
-          <span key={i} className="text-amber-400" style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: 0, width: '50%', overflow: 'hidden' }}>★</span>
-            <span className="text-slate-300 dark:text-slate-600">★</span>
-          </span>
-        );
-      } else {
-        stars.push(
-          <span key={i} className="text-slate-300 dark:text-slate-600">★</span>
-        );
-      }
+      stars.push(
+        <span key={i} className={i <= fullStars ? 'text-amber-400' : 'text-slate-300 dark:text-slate-600'}>
+          ★
+        </span>
+      );
     }
     return stars;
   };

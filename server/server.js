@@ -987,13 +987,26 @@ app.post('/api/reviews', async (req, res) => {
         
         await db.query(insertSql, [id, tripId, reviewerId, reviewerName, reviewedId, reviewedName, type, rating, comment || null, createdAt]);
         
-        // Note: User rating average and totalReviews are now updated automatically 
-        // by a PostgreSQL Trigger (update_rating_trigger) in the database.
-        // This avoids race conditions and manual calculation errors.
+        // Update user's rating average
+        const statsSql = isPostgres
+            ? 'SELECT AVG(rating) as avgRating, COUNT(*) as count FROM reviews WHERE "reviewedId" = ?'
+            : 'SELECT AVG(rating) as avgRating, COUNT(*) as count FROM reviews WHERE reviewedId = ?';
+        const stats = await db.query(statsSql, [reviewedId]);
+        
+        const newRating = stats[0].avgRating;
+        const newTotalReviews = stats[0].count;
+        
+        const updateUserSql = isPostgres
+            ? `UPDATE users SET rating = ?, "totalReviews" = ? WHERE id = ?`
+            : `UPDATE users SET rating = ?, totalReviews = ? WHERE id = ?`;
+        
+        await db.query(updateUserSql, [newRating, newTotalReviews, reviewedId]);
         
         res.json({ 
             message: 'Review created', 
-            id
+            id,
+            newRating,
+            newTotalReviews
         });
     } catch (err) {
         console.error('[Reviews] Error:', err);
