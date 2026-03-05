@@ -989,12 +989,14 @@ app.post('/api/reviews', async (req, res) => {
         
         // Update user's rating average
         const statsSql = isPostgres
-            ? 'SELECT AVG(rating)::numeric(3,2) as avgRating, COUNT(*) as count FROM reviews WHERE "reviewedId" = ?'
-            : 'SELECT AVG(rating) as avgRating, COUNT(*) as count FROM reviews WHERE reviewedId = ?';
+            ? 'SELECT COALESCE(AVG(rating), 0)::numeric(3,2) as avgRating, COUNT(*) as count FROM reviews WHERE "reviewedId" = ?'
+            : 'SELECT COALESCE(AVG(rating), 0) as avgRating, COUNT(*) as count FROM reviews WHERE reviewedId = ?';
         const stats = await db.query(statsSql, [reviewedId]);
         
-        const newRating = parseFloat(stats[0].avgRating);
-        const newTotalReviews = parseInt(stats[0].count);
+        const newRating = parseFloat(stats[0].avgRating) || 0;
+        const newTotalReviews = parseInt(stats[0].count) || 0;
+        
+        console.log(`[Reviews] Updating user ${reviewedId} with rating ${newRating} and ${newTotalReviews} reviews`);
         
         const updateUserSql = isPostgres
             ? `UPDATE users SET rating = ?, "totalReviews" = ? WHERE id = ?`
