@@ -122,6 +122,8 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
       if (historyId) {
         await db.markReviewSubmitted(historyId);
       }
+      // Trigger recalculation to ensure consistency
+      await db.recalculateUserRating(participant.id);
       onReviewSubmitted();
       onClose();
     } else {
