@@ -987,42 +987,13 @@ app.post('/api/reviews', async (req, res) => {
         
         await db.query(insertSql, [id, tripId, reviewerId, reviewerName, reviewedId, reviewedName, type, rating, comment || null, createdAt]);
         
-        // Update user's rating average - use ROUND for better compatibility
-        const statsSql = isPostgres
-            ? 'SELECT ROUND(COALESCE(AVG(rating), 0), 1) as avgRating, COUNT(*) as count FROM reviews WHERE "reviewedId" = ?'
-            : 'SELECT COALESCE(AVG(rating), 0) as avgRating, COUNT(*) as count FROM reviews WHERE reviewedId = ?';
-        
-        console.log(`[Reviews] Running stats query for:`, reviewedId);
-        const stats = await db.query(statsSql, [reviewedId]);
-        console.log(`[Reviews] Stats result:`, JSON.stringify(stats));
-        
-        let newRating = 0;
-        let newTotalReviews = 0;
-        
-        if (stats && stats[0]) {
-            newRating = parseFloat(String(stats[0].avgRating)) || 0;
-            newTotalReviews = parseInt(String(stats[0].count)) || 0;
-        }
-        
-        console.log(`[Reviews] Final values - rating: ${newRating}, totalReviews: ${newTotalReviews}`);
-        
-        // Update the user's rating in the database (use ? for both Postgres and SQLite - database.js handles conversion)
-        const updateUserSql = `UPDATE users SET rating = ?, "totalReviews" = ? WHERE id = ?`;
-        
-        console.log(`[Reviews] About to update user with: rating=${newRating}, totalReviews=${newTotalReviews}, userId=${reviewedId}`);
-        
-        try {
-            const result = await db.query(updateUserSql, [newRating, newTotalReviews, reviewedId]);
-            console.log(`[Reviews] Update result:`, result);
-        } catch (updateErr) {
-            console.error(`[Reviews] Error updating user:`, updateErr);
-        }
+        // Note: User rating average and totalReviews are now updated automatically 
+        // by a PostgreSQL Trigger (update_rating_trigger) in the database.
+        // This avoids race conditions and manual calculation errors.
         
         res.json({ 
             message: 'Review created', 
-            id,
-            newRating,
-            newTotalReviews
+            id
         });
     } catch (err) {
         console.error('[Reviews] Error:', err);
