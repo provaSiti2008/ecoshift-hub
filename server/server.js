@@ -987,22 +987,36 @@ app.post('/api/reviews', async (req, res) => {
         
         await db.query(insertSql, [id, tripId, reviewerId, reviewerName, reviewedId, reviewedName, type, rating, comment || null, createdAt]);
         
-        // Update user's rating average
+        // Update user's rating average - use ROUND for better compatibility
         const statsSql = isPostgres
-            ? 'SELECT COALESCE(AVG(rating), 0)::numeric(3,2) as avgRating, COUNT(*) as count FROM reviews WHERE "reviewedId" = ?'
+            ? 'SELECT ROUND(COALESCE(AVG(rating), 0), 1) as avgRating, COUNT(*) as count FROM reviews WHERE "reviewedId" = ?'
             : 'SELECT COALESCE(AVG(rating), 0) as avgRating, COUNT(*) as count FROM reviews WHERE reviewedId = ?';
+        
+        console.log(`[Reviews] Running stats query for:`, reviewedId);
         const stats = await db.query(statsSql, [reviewedId]);
+        console.log(`[Reviews] Stats result:`, JSON.stringify(stats));
         
-        const newRating = parseFloat(stats[0].avgRating) || 0;
-        const newTotalReviews = parseInt(stats[0].count) || 0;
+        let newRating = 0;
+        let newTotalReviews = 0;
         
-        console.log(`[Reviews] Updating user ${reviewedId} with rating ${newRating} and ${newTotalReviews} reviews`);
+        if (stats && stats[0]) {
+            newRating = parseFloat(String(stats[0].avgRating)) || 0;
+            newTotalReviews = parseInt(String(stats[0].count)) || 0;
+        }
         
-        const updateUserSql = isPostgres
-            ? `UPDATE users SET rating = ?, "totalReviews" = ? WHERE id = ?`
-            : `UPDATE users SET rating = ?, totalReviews = ? WHERE id = ?`;
+        console.log(`[Reviews] Final values - rating: ${newRating}, totalReviews: ${newTotalReviews}`);
         
-        await db.query(updateUserSql, [newRating, newTotalReviews, reviewedId]);
+        // Update the user's rating in the database (use ? for both Postgres and SQLite - database.js handles conversion)
+        const updateUserSql = `UPDATE users SET rating = ?, "totalReviews" = ? WHERE id = ?`;
+        
+        console.log(`[Reviews] About to update user with: rating=${newRating}, totalReviews=${newTotalReviews}, userId=${reviewedId}`);
+        
+        try {
+            const result = await db.query(updateUserSql, [newRating, newTotalReviews, reviewedId]);
+            console.log(`[Reviews] Update result:`, result);
+        } catch (updateErr) {
+            console.error(`[Reviews] Error updating user:`, updateErr);
+        }
         
         res.json({ 
             message: 'Review created', 
