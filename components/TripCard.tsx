@@ -200,7 +200,7 @@ export const TripCard: React.FC<TripCardProps> = ({
                   <span className="ml-1 inline-flex items-center justify-center w-4 h-4 bg-emerald-500 rounded-full text-[8px] text-white" title="Patente verificata">✓</span>
                 )}
               </p>
-              {driverRating && driverRating.rating && (
+              {driverRating && driverRating.rating != null && driverRating.totalReviews > 0 ? (
                 <div className="flex items-center gap-1 mt-1">
                   <div className="flex">{renderStars(driverRating.rating)}</div>
                   <span className="text-xs text-slate-500 dark:text-slate-400">
@@ -211,6 +211,10 @@ export const TripCard: React.FC<TripCardProps> = ({
                       ✓
                     </span>
                   )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 mt-1">
+                  <span className="text-xs text-slate-400 dark:text-slate-500 italic">{t.no_reviews_yet || 'Nessuna valutazione'}</span>
                 </div>
               )}
             </div>
@@ -238,7 +242,7 @@ export const TripCard: React.FC<TripCardProps> = ({
                   <span className="ml-1 inline-flex items-center justify-center w-4 h-4 bg-emerald-500 rounded-full text-[8px] text-white" title="Patente verificata">✓</span>
                 )}
               </p>
-              {driverRating && driverRating.rating && (
+              {driverRating && driverRating.rating != null && driverRating.totalReviews > 0 ? (
                 <div className="flex items-center gap-1 mt-1">
                   <div className="flex">{renderStars(driverRating.rating)}</div>
                   <span className="text-xs text-slate-500 dark:text-slate-400">
@@ -249,6 +253,10 @@ export const TripCard: React.FC<TripCardProps> = ({
                       ✓
                     </span>
                   )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 mt-1">
+                  <span className="text-xs text-slate-400 dark:text-slate-500 italic">{t.no_reviews_yet || 'Nessuna valutazione'}</span>
                 </div>
               )}
             </div>

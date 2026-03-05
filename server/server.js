@@ -1014,6 +1014,40 @@ app.post('/api/reviews', async (req, res) => {
     }
 });
 
+// POST /api/users/:id/recalculate-rating - Recalculate user rating (useful for fixing existing data)
+app.post('/api/users/:id/recalculate-rating', async (req, res) => {
+    try {
+        const userId = req.params.id;
+        
+        // Calculate aggregate stats
+        const statsSql = isPostgres
+            ? 'SELECT AVG(rating) as avgRating, COUNT(*) as count FROM reviews WHERE "reviewedId" = ?'
+            : 'SELECT AVG(rating) as avgRating, COUNT(*) as count FROM reviews WHERE reviewedId = ?';
+        const stats = await db.query(statsSql, [userId]);
+        
+        const newRating = stats[0].avgRating || null;
+        const newTotalReviews = stats[0].count || 0;
+        
+        const updateUserSql = isPostgres
+            ? `UPDATE users SET rating = ?, "totalReviews" = ? WHERE id = ?`
+            : `UPDATE users SET rating = ?, totalReviews = ? WHERE id = ?`;
+        
+        await db.query(updateUserSql, [newRating, newTotalReviews, userId]);
+        
+        console.log(`[Rating Recalc] User ${userId}: rating=${newRating}, totalReviews=${newTotalReviews}`);
+        
+        res.json({
+            message: 'Rating recalculated',
+            userId,
+            rating: newRating,
+            totalReviews: newTotalReviews
+        });
+    } catch (err) {
+        console.error('[Rating Recalc] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // GET /api/trips/:tripId/participants - Get trip participants (for review modal)
 app.get('/api/trips/:tripId/participants', async (req, res) => {
     try {

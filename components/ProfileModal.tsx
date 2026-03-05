@@ -63,6 +63,17 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
     }
   }, [isOpen, user]);
 
+  // Refresh reviews when sync event is triggered (e.g., after a new review is submitted)
+  useEffect(() => {
+    const handleSync = () => {
+      if (isOpen) {
+        loadReviews();
+      }
+    };
+    window.addEventListener('ecoshift-sync', handleSync);
+    return () => window.removeEventListener('ecoshift-sync', handleSync);
+  }, [isOpen]);
+
   const loadDriverLicense = async () => {
     try {
       const license = await db.getDriverLicense(user.id);
@@ -298,15 +309,17 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
             {/* Rating */}
             <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 flex items-center gap-4">
               <div className="text-3xl font-black text-slate-800 dark:text-white">
-                {userRating.rating ? userRating.rating.toFixed(1) : '-'}
+                {userRating.rating != null && userRating.totalReviews > 0 ? userRating.rating.toFixed(1) : '-'}
               </div>
               <div className="flex flex-col">
                 <div className="flex">
-                  {userRating.rating ? renderStars(userRating.rating) : (
-                    <span className="text-slate-400 text-sm">Nessuna valutazione</span>
+                  {userRating.rating != null && userRating.totalReviews > 0 ? renderStars(userRating.rating) : (
+                    <span className="text-slate-400 text-sm">{t.no_reviews_yet || 'Nessuna valutazione'}</span>
                   )}
                 </div>
-                <span className="text-xs text-slate-500">{userRating.totalReviews} {t.reviews || 'recensioni'}</span>
+                <span className="text-xs text-slate-500">
+                  {userRating.totalReviews > 0 ? `${userRating.totalReviews} ${t.reviews || 'recensioni'}` : (t.no_reviews_yet || 'Nessuna recensione')}
+                </span>
               </div>
             </div>
 
@@ -591,15 +604,17 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
             {/* Rating Stats */}
             <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 flex items-center gap-4">
               <div className="text-3xl font-black text-slate-800 dark:text-white">
-                {userRating.rating ? userRating.rating.toFixed(1) : '-'}
+                {userRating.rating != null && userRating.totalReviews > 0 ? userRating.rating.toFixed(1) : '-'}
               </div>
               <div className="flex flex-col">
                 <div className="flex">
-                  {userRating.rating ? renderStars(userRating.rating) : (
-                    <span className="text-slate-400 text-sm">Nessuna valutazione</span>
+                  {userRating.rating != null && userRating.totalReviews > 0 ? renderStars(userRating.rating) : (
+                    <span className="text-slate-400 text-sm">{t.no_reviews_yet || 'Nessuna valutazione'}</span>
                   )}
                 </div>
-                <span className="text-xs text-slate-500">{userRating.totalReviews} {t.reviews || 'recensioni'}</span>
+                <span className="text-xs text-slate-500">
+                  {userRating.totalReviews > 0 ? `${userRating.totalReviews} ${t.reviews || 'recensioni'}` : (t.no_reviews_yet || 'Nessuna recensione')}
+                </span>
               </div>
             </div>
 

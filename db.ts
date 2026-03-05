@@ -597,6 +597,25 @@ async getRealTimeDepartures(stationId: string, time?: Date): Promise<any[]> {
       return { totalAsDriver: 0, totalAsPassenger: 0, totalDistanceKm: 0, totalCo2Saved: 0 };
     }
   }
+
+  // --- Rating Recalculation ---
+  async recalculateUserRating(userId: string): Promise<{ ok: boolean; rating?: number | null; totalReviews?: number; error?: string }> {
+    try {
+      const res = await fetch(`${API_URL}/users/${userId}/recalculate-rating`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return { ok: false, error: data.error || res.statusText };
+      }
+      this.triggerSyncUI();
+      return { ok: true, rating: data.rating, totalReviews: data.totalReviews };
+    } catch (err) {
+      console.error('Error recalculating user rating:', err);
+      return { ok: false, error: err.message };
+    }
+  }
 }
 
 export const db = new MamaDB();
