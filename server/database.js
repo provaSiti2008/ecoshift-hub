@@ -286,11 +286,78 @@ async function initDb() {
     // Columns already exist
   }
 
+  // Migration: Create PostgreSQL trigger for automatic rating recalculation
+  if (isPostgres) {
+    try {
+      // Create the update function using direct db.query to avoid ? parameter replacement
+      const createFunctionSql = `CREATE OR REPLACE FUNCTION update_user_rating()
+RETURNS TRIGGER AS $func$
+BEGIN
+    UPDATE users 
+    SET rating = (SELECT AVG(rating) FROM reviews WHERE "reviewedId" = COALESCE(NEW."reviewedId", OLD."reviewedId")),
+        "totalReviews" = (SELECT COUNT(*) FROM reviews WHERE "reviewedId" = COALESCE(NEW."reviewedId", OLD."reviewedId"))
+    WHERE id = COALESCE(NEW."reviewedId", OLD."reviewedId");
+    RETURN COALESCE(NEW, OLD);
+END;
+$func$ LANGUAGE plpgsql`;
+      
+      await db.query(createFunctionSql);
+      
+      // Drop existing trigger if exists
+      await db.query('DROP TRIGGER IF EXISTS reviews_update_rating ON reviews');
+      
+      // Create trigger
+      await db.query(`CREATE TRIGGER reviews_update_rating
+AFTER INSERT OR UPDATE OR DELETE ON reviews
+FOR EACH ROW EXECUTE FUNCTION update_user_rating()`);
+      
+      console.log('Migration: Created PostgreSQL trigger for automatic rating recalculation');
+    } catch (e) {
+      console.log('Migration: Trigger creation skipped or failed:', e.message);
+    }
+  }
+
   console.log('Database tables initialized.');
+  
+  // Backfill existing ratings from reviews (one-time migration)
+  await backfillRatings();
+}
+
+// Backfill ratings for existing reviews (useful for migrations)
+async function backfillRatings() {
+  try {
+    if (isPostgres) {
+      // For PostgreSQL, use the SQL script or trigger will handle new reviews
+      // But we still need to backfill existing data
+      const updateSql = `
+        UPDATE users u 
+        SET rating = subquery.avg_rating,
+            "totalReviews" = subquery.review_count
+        FROM (
+            SELECT "reviewedId" as user_id, AVG(rating) as avg_rating, COUNT(*) as review_count
+            FROM reviews
+            GROUP BY "reviewedId"
+        ) subquery
+        WHERE u.id = subquery.user_id
+      `;
+      await db.query(updateSql);
+    } else {
+      // For SQLite, use a simpler approach
+      const reviews = await query('SELECT reviewedId, AVG(rating) as avgRating, COUNT(*) as count FROM reviews GROUP BY reviewedId');
+      for (const row of reviews) {
+        await query('UPDATE users SET rating = ?, totalReviews = ? WHERE id = ?', 
+          [row.avgRating, row.count, row.reviewedId]);
+      }
+    }
+    console.log('Migration: Backfilled existing user ratings from reviews');
+  } catch (e) {
+    console.log('Migration: Backfill ratings skipped or failed:', e.message);
+  }
 }
 
 module.exports = {
   query,
   initDb,
-  isPostgres
+  isPostgres,
+  backfillRatings
 };

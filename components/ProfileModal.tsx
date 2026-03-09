@@ -308,12 +308,17 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
 
             {/* Rating */}
             <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 flex items-center gap-4">
-              <div className="text-3xl font-black text-slate-800 dark:text-white">
+              <div className="text-3xl font-black text-amber-500">
                 {userRating.rating != null && userRating.totalReviews > 0 ? userRating.rating.toFixed(1) : '-'}
               </div>
               <div className="flex flex-col">
-                <div className="flex">
-                  {userRating.rating != null && userRating.totalReviews > 0 ? renderStars(userRating.rating) : (
+                <div className="flex items-center gap-2">
+                  {userRating.rating != null && userRating.totalReviews > 0 ? (
+                    <>
+                      <div className="flex">{renderStars(userRating.rating)}</div>
+                      <span className="text-xs text-slate-400">({userRating.totalReviews})</span>
+                    </>
+                  ) : (
                     <span className="text-slate-400 text-sm">{t.no_reviews_yet || 'Nessuna valutazione'}</span>
                   )}
                 </div>
@@ -603,12 +608,17 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
             
             {/* Rating Stats */}
             <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 flex items-center gap-4">
-              <div className="text-3xl font-black text-slate-800 dark:text-white">
+              <div className="text-3xl font-black text-amber-500">
                 {userRating.rating != null && userRating.totalReviews > 0 ? userRating.rating.toFixed(1) : '-'}
               </div>
               <div className="flex flex-col">
-                <div className="flex">
-                  {userRating.rating != null && userRating.totalReviews > 0 ? renderStars(userRating.rating) : (
+                <div className="flex items-center gap-2">
+                  {userRating.rating != null && userRating.totalReviews > 0 ? (
+                    <>
+                      <div className="flex">{renderStars(userRating.rating)}</div>
+                      <span className="text-xs text-slate-400">({userRating.totalReviews})</span>
+                    </>
+                  ) : (
                     <span className="text-slate-400 text-sm">{t.no_reviews_yet || 'Nessuna valutazione'}</span>
                   )}
                 </div>

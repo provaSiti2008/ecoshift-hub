@@ -1002,6 +1002,8 @@ app.post('/api/reviews', async (req, res) => {
         
         await db.query(updateUserSql, [newRating, newTotalReviews, reviewedId]);
         
+        console.log(`[Reviews] Updated user ${reviewedId} rating: ${newRating} (${newTotalReviews} reviews)`);
+        
         res.json({ 
             message: 'Review created', 
             id,

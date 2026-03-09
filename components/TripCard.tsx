@@ -87,6 +87,23 @@ export const TripCard: React.FC<TripCardProps> = ({
     loadDriverData();
   }, [trip.driverId]);
 
+  // Refresh driver rating when sync event is triggered (e.g., after a new review)
+  useEffect(() => {
+    const handleSync = () => {
+      const refreshDriverData = async () => {
+        try {
+          const rating = await db.getUserRating(trip.driverId);
+          setDriverRating(rating);
+        } catch (e) {
+          console.error("Error refreshing driver rating", e);
+        }
+      };
+      refreshDriverData();
+    };
+    window.addEventListener('ecoshift-sync', handleSync);
+    return () => window.removeEventListener('ecoshift-sync', handleSync);
+  }, [trip.driverId]);
+
   const renderStars = (rating: number | null | undefined) => {
     if (!rating) return null;
     const stars = [];
@@ -201,7 +218,8 @@ export const TripCard: React.FC<TripCardProps> = ({
                 )}
               </p>
               {driverRating && driverRating.rating != null && driverRating.totalReviews > 0 ? (
-                <div className="flex items-center gap-1 mt-1">
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="text-sm font-bold text-amber-500">{driverRating.rating.toFixed(1)}</span>
                   <div className="flex">{renderStars(driverRating.rating)}</div>
                   <span className="text-xs text-slate-500 dark:text-slate-400">
                     ({driverRating.totalReviews})
@@ -243,7 +261,8 @@ export const TripCard: React.FC<TripCardProps> = ({
                 )}
               </p>
               {driverRating && driverRating.rating != null && driverRating.totalReviews > 0 ? (
-                <div className="flex items-center gap-1 mt-1">
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="text-sm font-bold text-amber-500">{driverRating.rating.toFixed(1)}</span>
                   <div className="flex">{renderStars(driverRating.rating)}</div>
                   <span className="text-xs text-slate-500 dark:text-slate-400">
                     ({driverRating.totalReviews})
