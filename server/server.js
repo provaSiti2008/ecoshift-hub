@@ -1058,19 +1058,12 @@ app.get('/api/trips/:tripId/participants', async (req, res) => {
 
 // --- User Trips Stats (for Profile) ---
 
-// GET /api/users/:id/trips-stats - Get aggregated trip statistics for a user (ALL trips with REAL distances)
+// GET /api/users/:id/trips-stats - Get aggregated trip statistics for a user (ONLY completed trips)
 app.get('/api/users/:id/trips-stats', async (req, res) => {
     const userId = req.params.id;
     
     try {
-        // Get ALL trips (no date filter)
-        const tripsSql = isPostgres
-            ? 'SELECT * FROM trips'
-            : 'SELECT * FROM trips';
-        
-        const allTrips = await db.query(tripsSql);
-        
-        // Get completed trips history
+        // Get completed trips history only (trips are only counted after completion)
         const historySql = isPostgres
             ? 'SELECT * FROM completed_trips_history WHERE user_id = ?'
             : 'SELECT * FROM completed_trips_history WHERE user_id = ?';
@@ -1081,37 +1074,7 @@ app.get('/api/users/:id/trips-stats', async (req, res) => {
         let totalCo2Saved = 0;
         let totalDistanceKm = 0;
         
-        // Process current trips in DB
-        for (const trip of allTrips) {
-            const passengerIds = JSON.parse(trip.passengerIds || '[]');
-            const isDriver = trip.driverId === userId;
-            const isPassenger = passengerIds.includes(userId);
-            
-            if (isDriver || isPassenger) {
-                // Calcola distanza REALE usando coordinate
-                const realDistance = getRealDistance(trip.fromLoc, trip.toLoc);
-                
-                // Usa distanza reale se disponibile, altrimenti usa quella salvata
-                const distanceKm = realDistance !== null ? realDistance : (trip.distanceKm || 0);
-                // Calcola CO2 reale: 0.21 kg CO2 per km per auto media (1.3 L/100km)
-                const co2Saved = distanceKm * 0.21;
-                
-                if (isDriver) {
-                    totalAsDriver++;
-                    totalCo2Saved += co2Saved;
-                    totalDistanceKm += distanceKm;
-                } else if (isPassenger) {
-                    totalAsPassenger++;
-                    const passengerCount = passengerIds.length;
-                    if (passengerCount > 0) {
-                        totalCo2Saved += (co2Saved / passengerCount);
-                        totalDistanceKm += (distanceKm / passengerCount);
-                    }
-                }
-            }
-        }
-        
-        // Add stats from completed trips history (these are already calculated)
+        // Process only completed trips history
         for (const h of historyTrips) {
             if (h.role === 'driver') {
                 totalAsDriver++;
