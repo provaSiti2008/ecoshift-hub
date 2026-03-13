@@ -1003,29 +1003,11 @@ app.post('/api/reviews', async (req, res) => {
         
         await db.query(insertSql, [id, tripId, reviewerId, reviewerName, reviewedId, reviewedName, type, rating, comment || null, createdAt]);
         
-        // Update user's rating average
-        const statsSql = isPostgres
-            ? 'SELECT AVG(rating)::float as avgRating, COUNT(*) as count FROM reviews WHERE "reviewedId" = ?'
-            : 'SELECT AVG(rating) as avgRating, COUNT(*) as count FROM reviews WHERE reviewedId = ?';
-        const stats = await db.query(statsSql, [reviewedId]);
-        
-        const newRating = stats[0].avgRating;
-        const newTotalReviews = stats[0].count;
-        
-        console.log('[DEBUG] Updating rating for user:', reviewedId, 'newRating:', newRating, 'totalReviews:', newTotalReviews);
-        
-        const updateUserSql = isPostgres
-            ? `UPDATE users SET rating = ?, "totalReviews" = ? WHERE id = ?`
-            : `UPDATE users SET rating = ?, totalReviews = ? WHERE id = ?`;
-        
-        await db.query(updateUserSql, [newRating, newTotalReviews, reviewedId]);
-        console.log('[DEBUG] Rating updated successfully for user:', reviewedId);
+        // Rating update is now handled by database trigger (update_user_rating)
         
         res.json({ 
             message: 'Review created', 
-            id,
-            newRating,
-            newTotalReviews
+            id
         });
     } catch (err) {
         console.error('[Reviews] Error:', err);
