@@ -146,19 +146,9 @@ const loadData = async () => {
       passengerIds: []
     }));
     
-    // Also get past trips that are still in the main table (not yet in history)
-    const pastTrips = allTrips
-      .filter(t => !MOCK_DRIVER_IDS.includes(t.driverId))
-      .filter(t => new Date(t.departureTime) < now) // Solo viaggi passati
-      .filter(t => t.driverId === currentUser.id || (t.passengerIds && t.passengerIds.includes(currentUser.id))); // Solo se partecipante
-    
-    // Combine: history trips + current trips in the main DB that are past but not yet saved to history
-    const mainDbPastTrips = pastTrips.filter(pt => 
-      !historyTrips.some(h => h.trip_id === pt.id)
-    );
-    
-    const allCompleted = [...completedFromHistory, ...mainDbPastTrips];
-    const completedSorted = allCompleted.sort((a, b) => new Date(b.departureTime).getTime() - new Date(a.departureTime).getTime());
+    // Only show trips from history (not from main DB) - these have proper review tracking
+    // completedFromHistory already filtered for: no review submitted + within 7 days
+    const completedSorted = completedFromHistory.sort((a, b) => new Date(b.departureTime).getTime() - new Date(a.departureTime).getTime());
 
     // Filtro per gruppi di studio: rimuove demo e gestisce formato orario (HH:MM)
     const realGroups = allGroups
@@ -577,6 +567,9 @@ const loadData = async () => {
                   {completedTrips.slice(0, 10).map((trip) => {
                     const historyEntry = completedTripsHistory.find(h => h.trip_id === trip.id);
                     const historyId = historyEntry?.id || null;
+                    const isAlreadyReviewed = !!historyEntry?.review_submitted_at;
+                    const canReview = !isAlreadyReviewed && historyEntry && new Date(historyEntry.can_review_until) > new Date();
+                    
                     return (
                     <div key={trip.id} className="glass-panel p-4 rounded-2xl flex items-center justify-between">
                       <div className="flex-1">
@@ -588,12 +581,18 @@ const loadData = async () => {
                           {trip.driverId === currentUser.id ? (t.you_were_driver || 'Eri il driver') : (t.you_were_passenger || 'Eri passeggero')}
                         </p>
                       </div>
-                      <button
-                        onClick={() => { setSelectedReviewTrip(trip); setSelectedReviewHistoryId(historyId); setReviewModalOpen(true); }}
-                        className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all"
-                      >
-                        ⭐ {t.leave_review || 'Recensione'}
-                      </button>
+                      {canReview ? (
+                        <button
+                          onClick={() => { setSelectedReviewTrip(trip); setSelectedReviewHistoryId(historyId); setReviewModalOpen(true); }}
+                          className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all"
+                        >
+                          ⭐ {t.leave_review || 'Recensione'}
+                        </button>
+                      ) : (
+                        <span className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-500 text-xs font-bold rounded-xl">
+                          {isAlreadyReviewed ? '✓' : '⏰'}
+                        </span>
+                      )}
                     </div>);
                   })}
                 </div>
