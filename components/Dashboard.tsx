@@ -121,6 +121,16 @@ const loadData = async () => {
       db.getCompletedTripsHistory(currentUser.id)
     ]);
     const now = new Date();
+    
+    // DEBUG: Log dei dati ricevuti
+    console.log('[DEBUG] historyTrips totali:', historyTrips.length);
+    console.log('[DEBUG] historyTrips:', historyTrips.map(h => ({
+      id: h.id,
+      role: h.role,
+      review_submitted_at: h.review_submitted_at,
+      can_review_until: h.can_review_until
+    })));
+    
     // Filtro doppio: rimuove demo E viaggi scaduti
     const realTrips = allTrips
       .filter(t => !MOCK_DRIVER_IDS.includes(t.driverId))
@@ -133,6 +143,14 @@ const loadData = async () => {
       if (h.role === 'driver') return false; // Drivers can't review themselves
       return true;
     });
+    
+    // DEBUG: Log dopo il filtro
+    console.log('[DEBUG] reviewableHistory dopo filtro:', reviewableHistory.length);
+    console.log('[DEBUG] reviewableHistory:', reviewableHistory.map(h => ({
+      id: h.id,
+      role: h.role,
+      can_review_until: h.can_review_until
+    })));
     
     // Convert history to Trip format for display
     const completedFromHistory: Trip[] = reviewableHistory.map(h => ({
