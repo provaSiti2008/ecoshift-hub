@@ -130,6 +130,7 @@ const loadData = async () => {
     const reviewableHistory = historyTrips.filter(h => {
       if (h.review_submitted_at) return false; // Already reviewed
       if (new Date(h.can_review_until) < now) return false; // More than 7 days passed
+      if (h.role === 'driver') return false; // Drivers can't review themselves
       return true;
     });
     
@@ -578,7 +579,7 @@ const loadData = async () => {
                         </p>
                         <p className="text-xs text-slate-500">
                           {new Date(trip.departureTime).toLocaleDateString()} • 
-                          {trip.driverId === currentUser.id ? (t.you_were_driver || 'Eri il driver') : (t.you_were_passenger || 'Eri passeggero')}
+                          {historyEntry?.role === 'driver' ? (t.you_were_driver || 'Eri il driver') : (t.you_were_passenger || 'Eri passeggero')}
                         </p>
                       </div>
                       {canReview ? (
