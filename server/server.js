@@ -884,10 +884,26 @@ app.delete('/api/study-groups/:id', async (req, res) => {
 
 // GET /api/reviews/:userId - Get reviews received by user
 app.get('/api/reviews/:userId', async (req, res) => {
+    console.log('[DEBUG] GET /api/reviews/:userId called with:', req.params.userId);
     try {
         const sql = isPostgres
             ? 'SELECT * FROM reviews WHERE "reviewedId" = ? ORDER BY "createdAt" DESC'
             : 'SELECT * FROM reviews WHERE reviewedId = ? ORDER BY createdAt DESC';
+        const rows = await db.query(sql, [req.params.userId]);
+        console.log('[DEBUG] Reviews query result:', rows.length);
+        res.json(rows);
+    } catch (err) {
+        console.error('[Reviews API] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET /api/reviews/:userId/written - Get reviews written by user
+app.get('/api/reviews/:userId/written', async (req, res) => {
+    try {
+        const sql = isPostgres
+            ? 'SELECT * FROM reviews WHERE "reviewerId" = ? ORDER BY "createdAt" DESC'
+            : 'SELECT * FROM reviews WHERE reviewerId = ? ORDER BY createdAt DESC';
         const rows = await db.query(sql, [req.params.userId]);
         res.json(rows);
     } catch (err) {
@@ -989,18 +1005,21 @@ app.post('/api/reviews', async (req, res) => {
         
         // Update user's rating average
         const statsSql = isPostgres
-            ? 'SELECT AVG(rating) as avgRating, COUNT(*) as count FROM reviews WHERE "reviewedId" = ?'
+            ? 'SELECT AVG(rating)::float as avgRating, COUNT(*) as count FROM reviews WHERE "reviewedId" = ?'
             : 'SELECT AVG(rating) as avgRating, COUNT(*) as count FROM reviews WHERE reviewedId = ?';
         const stats = await db.query(statsSql, [reviewedId]);
         
         const newRating = stats[0].avgRating;
         const newTotalReviews = stats[0].count;
         
+        console.log('[DEBUG] Updating rating for user:', reviewedId, 'newRating:', newRating, 'totalReviews:', newTotalReviews);
+        
         const updateUserSql = isPostgres
             ? `UPDATE users SET rating = ?, "totalReviews" = ? WHERE id = ?`
             : `UPDATE users SET rating = ?, totalReviews = ? WHERE id = ?`;
         
         await db.query(updateUserSql, [newRating, newTotalReviews, reviewedId]);
+        console.log('[DEBUG] Rating updated successfully for user:', reviewedId);
         
         res.json({ 
             message: 'Review created', 

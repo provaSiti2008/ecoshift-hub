@@ -124,11 +124,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, use
   };
 
   const loadReviews = async () => {
+    console.log('[DEBUG] loadReviews called for user:', user.id);
     try {
       const [userReviews, rating] = await Promise.all([
         db.getReviews(user.id),
         db.getUserRating(user.id)
       ]);
+      console.log('[DEBUG] Reviews loaded:', userReviews.length, 'rating:', rating);
       setReviews(userReviews);
       setUserRating(rating);
     } catch (err) {

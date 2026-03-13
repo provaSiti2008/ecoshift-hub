@@ -431,6 +431,18 @@ async getRealTimeDepartures(stationId: string, time?: Date): Promise<any[]> {
     }
   }
 
+  async getReviewsWritten(userId: string): Promise<Review[]> {
+    try {
+      const res = await fetch(`${API_URL}/reviews/${userId}/written`);
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    } catch (err) {
+      console.error('Error fetching reviews written:', err);
+      return [];
+    }
+  }
+
   async getUserRating(userId: string): Promise<UserRating> {
     try {
       const res = await fetch(`${API_URL}/users/${userId}/rating`);

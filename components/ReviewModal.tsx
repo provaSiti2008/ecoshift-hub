@@ -75,7 +75,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
       }
 
       // Check if already reviewed
-      const reviews = await db.getReviews(currentUser.id);
+      const reviews = await db.getReviewsWritten(currentUser.id);
       const alreadyReviewed = reviews.some(r => r.tripId === trip.id);
       setExistingReview(alreadyReviewed);
     } catch (err) {
